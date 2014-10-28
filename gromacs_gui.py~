@@ -116,7 +116,6 @@ class MyMainWindow(wx.Frame):
         self.sizer2.Add(self.button2, -1, wx.EXPAND)
         self.sizer2.Add(self.button3, -1, wx.EXPAND)
 
-
         vbox.Add(toolbar, 0, wx.EXPAND)
         vbox.Add(self.plottoolbar, 0, wx.EXPAND)
         vbox.Add(self.sizer2, 0, wx.EXPAND)
@@ -144,6 +143,7 @@ class MyMainWindow(wx.Frame):
         #Menubar
         myNewMenuBar=MyMenuBar(self, -1, "test")
         self.SetSize((800, 600))
+
 
     def changePlot(self, event):
         if self.current_draw == 'sin' :
@@ -261,6 +261,7 @@ class MyMainWindow(wx.Frame):
     def solvate(self, event):
         #Define box properties
         boxtype=self.boxtypechoice(event)
+#        error_message=
         if(boxtype != ""):
             if(version<5.0):
                 status=os.system("editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0")
@@ -284,26 +285,44 @@ class MyMainWindow(wx.Frame):
                         os.system("gmx solvate -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
                 else:
                     print ("ERROR: Something went wrong in solvation precedure! Check log files!")
+    def pos_iontypechoice(self, event):
+        lst = ["Na", "K", "Ca", "Mg"]
+        dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
+        if dlg.ShowModal() == wx.ID_OK:
+            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
+        dlg.Destroy()
+        return dlg.GetStringSelection().upper()
+
+    def neg_iontypechoice(self, event):
+        lst = ["Cl"]
+        dlg = wx.SingleChoiceDialog(self, 'Select negative ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
+        if dlg.ShowModal() == wx.ID_OK:
+            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
+        dlg.Destroy()
+        return dlg.GetStringSelection().upper()
 
     def ionize(self, event):
+        pos_ion=self.pos_iontypechoice(event)
+        neg_ion=self.neg_iontypechoice(event)
         #Prepare for ion addition
         preprocess_command="grompp -f ./scripts/ions.mdp -c solvated.pdb -p topol.top -o ions.tpr"
-        ionize_command="genion -s ions.tpr -o solv_ions.pdb -p topol.top -pname K -nname CL -neutral -conc 0.15"
+        ionize_command="genion -s ions.tpr -o solv_ions.pdb -p topol.top -pname "+pos_ion+" -nname "+neg_ion+" -neutral -conc 0.15"
+        error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
         if(version<5.0):
             status=os.system(preprocess_command)
             if(status==0):
                 #Produce and place ions
                 os.system(ionize_command)
             else:
-                print ("ERROR: Something went wrong in ionization precedure! Check log files!")
+                print (error_message)
 
         elif(version>=5.0):
             status=os.system("gmx "+preprocess_command)
             if(status==0):
                 #Produce and place ions
-                os.system(("gmx "+ionize_command)
+                os.system("gmx "+ionize_command)
             else:
-                print ("ERROR: Something went wrong in ionization precedure! Check log files!")
+                print (error_message)
 
 
     def tempentry(self, event):
