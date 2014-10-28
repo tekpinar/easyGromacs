@@ -11,10 +11,6 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Navigation
 solvent_model=""
 version=5.02
 #version=4.5
-#class TestFrame(wx.Frame):
-#    def __init__(self,parent,title):
-#        wx.Frame.__init__(self,parent,title=title,size=(500,500))
-#        self.p2 = MatplotPanel(self)
 
 class MyMenuBar(wx.Frame):
     def __init__(self, parent, id, title):
@@ -77,33 +73,29 @@ class MyMainWindow(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(800, 600))
 
 
-#        self.p2 = MatplotPanel(self)
-
         #Box parameters
         vbox = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(vbox)
-#        self.vbox = wx.BoxSizer(wx.VERTICAL)
-#        self.SetSizer(self.vbox)
-
 
         self.figure = Figure()
         self.axes = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self, -1, self.figure)
         self.plottoolbar = NavigationToolbar(self.canvas)
 
-        self.button = wx.Button(self, -1, "Update Plot")
-        self.button.Bind(wx.EVT_BUTTON, self.changePlot)
+        self.button1 = wx.Button(self, -1, "Plot Total Energy vs. Time")
+        self.button1.Bind(wx.EVT_BUTTON, self.changePlot)
 
+        self.button2 = wx.Button(self, -1, "Plot Temperature vs. Time")
+#        self.button1.Bind(wx.EVT_BUTTON, self.changePlot)
 
+        self.button3 = wx.Button(self, -1, "Plot Pressure vs. Time")
+#        self.button1.Bind(wx.EVT_BUTTON, self.changePlot)
 
         #Toolbar items
-
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
         toolbar.AddSimpleTool(1, wx.Image('./images/stock_new.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'New', '')
         toolbar.AddSimpleTool(2, wx.Image('./images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
         toolbar.AddSimpleTool(3, wx.Image('./images/stock_save.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Save', '')
-        toolbar.AddSimpleTool(5, wx.Image('./images/stock_redo.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Redo', '')
-        toolbar.AddSimpleTool(6, wx.Image('./images/stock_undo.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Undo', '')
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(7, wx.Image('./images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Prepare Model', '')
         toolbar.AddSimpleTool(9, wx.Image('./images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Solvate', '')
@@ -119,11 +111,15 @@ class MyMainWindow(wx.Frame):
         toolbar.AddSimpleTool(4, wx.Image('./images/stock_exit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
         toolbar.Realize()
 
+        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer2.Add(self.button1, -1, wx.EXPAND)
+        self.sizer2.Add(self.button2, -1, wx.EXPAND)
+        self.sizer2.Add(self.button3, -1, wx.EXPAND)
 
-        vbox.Add(toolbar, 0, border=5)
-        #vbox.Add(self.toolbar, 0, wx.EXPAND)
+
+        vbox.Add(toolbar, 0, wx.EXPAND)
         vbox.Add(self.plottoolbar, 0, wx.EXPAND)
-        vbox.Add(self.button, 0, wx.EXPAND)
+        vbox.Add(self.sizer2, 0, wx.EXPAND)
         vbox.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
 
         self.drawLines()
@@ -138,7 +134,6 @@ class MyMainWindow(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnSave, id=3)
         self.Bind(wx.EVT_TOOL, self.OnExit, id=4)
         self.Bind(wx.EVT_TOOL, self.prepare, id=7)
-#        self.Bind(wx.EVT_TOOL, self.ffchoice, id=8)
         self.Bind(wx.EVT_TOOL, self.solvate, id=9)
         self.Bind(wx.EVT_TOOL, self.ionize, id=10)
         self.Bind(wx.EVT_TOOL, self.OnMinimize, id=11)
@@ -256,7 +251,7 @@ class MyMainWindow(wx.Frame):
                 os.system("gmx pdb2gmx -f "+initial_pdb+" -o processed.pdb -water "+solvent_model.lower()+" -ff "+force_field[0:14])
 
     def boxtypechoice(self, event):
-        bt = ['Cubic', 'Triclinic', 'Dodecahedrob']
+        bt = ['Cubic', 'Triclinic', 'Dodecahedron']
         dlg = wx.SingleChoiceDialog(self, 'Select box type', 'Which one?', bt, wx.CHOICEDLG_STYLE)
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
@@ -266,35 +261,50 @@ class MyMainWindow(wx.Frame):
     def solvate(self, event):
         #Define box properties
         boxtype=self.boxtypechoice(event)
-        if(version<5.0):
-            status=os.system("editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0")
-            if(status==0):
-            #Produce box
-                if ( solvent_model.lower() == "tip3p"  or  solvent_model == "spc"  or  solvent_model == "spce"):
-                    os.system("genbox -cp newbox.pdb -cs spc216.gro -o solvated.pdb -p topol.top")
+        if(boxtype != ""):
+            if(version<5.0):
+                status=os.system("editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0")
+                if(status==0):
+                    #Produce box
+                    if ( solvent_model.lower() == "tip3p"  or  solvent_model == "spc"  or  solvent_model == "spce"):
+                        os.system("genbox -cp newbox.pdb -cs spc216.gro -o solvated.pdb -p topol.top")
                     
-                elif (solvent_model == "tip4p"):
-                    os.system("genbox -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
+                    elif (solvent_model == "tip4p"):
+                        os.system("genbox -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
                 else:
                     print ("ERROR: Something went wrong in solvation precedure! Check log files!")
-        elif(version>=5.0):
-            status=os.system("gmx editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0")
-            if(status==0):
-            #Produce box
-                if ( solvent_model.lower() == "tip3p"  or  solvent_model == "spc"  or  solvent_model == "spce"):
-                    os.system("gmx solvate -cp newbox.pdb -cs spc216.gro -o solvated.pdb -p topol.top")
+            elif(version>=5.0):
+                status=os.system("gmx editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0")
+                if(status==0):
+                    #Produce box
+                    if ( solvent_model.lower() == "tip3p"  or  solvent_model == "spc"  or  solvent_model == "spce"):
+                        os.system("gmx solvate -cp newbox.pdb -cs spc216.gro -o solvated.pdb -p topol.top")
                     
-                elif (solvent_model == "tip4p"):
-                    os.system("gmx solvate -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
+                    elif (solvent_model == "tip4p"):
+                        os.system("gmx solvate -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
                 else:
                     print ("ERROR: Something went wrong in solvation precedure! Check log files!")
 
     def ionize(self, event):
         #Prepare for ion addition
-        os.system("grompp -f ./scripts/ions.mdp -c solvated.pdb -p topol.top -o ions.tpr")
+        preprocess_command="grompp -f ./scripts/ions.mdp -c solvated.pdb -p topol.top -o ions.tpr"
+        ionize_command="genion -s ions.tpr -o solv_ions.pdb -p topol.top -pname K -nname CL -neutral -conc 0.15"
+        if(version<5.0):
+            status=os.system(preprocess_command)
+            if(status==0):
+                #Produce and place ions
+                os.system(ionize_command)
+            else:
+                print ("ERROR: Something went wrong in ionization precedure! Check log files!")
 
-      #Produce and place ions
-        os.system("genion -s ions.tpr -o solv_ions.pdb -p topol.top -pname K -nname CL -neutral -conc 0.15")
+        elif(version>=5.0):
+            status=os.system("gmx "+preprocess_command)
+            if(status==0):
+                #Produce and place ions
+                os.system("gmx "+ionize_command)
+            else:
+                print ("ERROR: Something went wrong in ionization precedure! Check log files!")
+
 
     def tempentry(self, event):
         dlg = wx.TextEntryDialog(self, 'Enter temperature in Kelvin','Text Entry')
