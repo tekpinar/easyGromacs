@@ -93,20 +93,20 @@ class MyMainWindow(wx.Frame):
 
         #Toolbar items
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(1, wx.Image('./images/stock_new.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'New', '')
+ #       toolbar.AddSimpleTool(1, wx.Image('./images/stock_new.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'New', '')
         toolbar.AddSimpleTool(2, wx.Image('./images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
-        toolbar.AddSimpleTool(3, wx.Image('./images/stock_save.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Save', '')
+#        toolbar.AddSimpleTool(3, wx.Image('./images/stock_save.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Save', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(7, wx.Image('./images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Prepare Model', '')
-        toolbar.AddSimpleTool(9, wx.Image('./images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Solvate', '')
-        toolbar.AddSimpleTool(10, wx.Image('./images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Ionize', '')
+        toolbar.AddSimpleTool(7, wx.Image('./images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(75, 40).ConvertToBitmap(), 'Prepare Model', '')
+        toolbar.AddSimpleTool(9, wx.Image('./images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(75, 40).ConvertToBitmap(), 'Solvate', '')
+        toolbar.AddSimpleTool(10, wx.Image('./images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(75, 40).ConvertToBitmap(), 'Ionize', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(11, wx.Image('./images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Minimize', '')
-        toolbar.AddSimpleTool(12, wx.Image('./images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
-        toolbar.AddSimpleTool(13, wx.Image('./images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
-        toolbar.AddSimpleTool(14, wx.Image('./images/run.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Production Run', '')
-        toolbar.AddSeparator()
-        toolbar.AddSimpleTool(15, wx.Image('./images/analyze.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Analyze', '')
+        toolbar.AddSimpleTool(11, wx.Image('./images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Minimize', '')
+        toolbar.AddSimpleTool(12, wx.Image('./images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
+        toolbar.AddSimpleTool(13, wx.Image('./images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
+        toolbar.AddSimpleTool(14, wx.Image('./images/run.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Production Run', '')
+#        toolbar.AddSeparator()
+#        toolbar.AddSimpleTool(15, wx.Image('./images/analyze.png', wx.BITMAP_TYPE_PNG).Rescale(35, 40).ConvertToBitmap(), 'Analyze', '')
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(4, wx.Image('./images/stock_exit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
         toolbar.Realize()
@@ -261,7 +261,7 @@ class MyMainWindow(wx.Frame):
     def solvate(self, event):
         #Define box properties
         boxtype=self.boxtypechoice(event)
-#        error_message=
+        error_message="ERROR: Something went wrong in solvation precedure! Check log files!"
         if(boxtype != ""):
             if(version<5.0):
                 status=os.system("editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0")
@@ -273,7 +273,7 @@ class MyMainWindow(wx.Frame):
                     elif (solvent_model == "tip4p"):
                         os.system("genbox -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
                 else:
-                    print ("ERROR: Something went wrong in solvation precedure! Check log files!")
+                    print (error_message)
             elif(version>=5.0):
                 status=os.system("gmx editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0")
                 if(status==0):
@@ -284,7 +284,7 @@ class MyMainWindow(wx.Frame):
                     elif (solvent_model == "tip4p"):
                         os.system("gmx solvate -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
                 else:
-                    print ("ERROR: Something went wrong in solvation precedure! Check log files!")
+                    print (error_message)
     def pos_iontypechoice(self, event):
         lst = ["Na", "K", "Ca", "Mg"]
         dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
@@ -343,7 +343,6 @@ class MyMainWindow(wx.Frame):
             if (status2==0):
                 self.SetStatusText('Completed minimization succesfully!\n')
                 
-
     def OnEquilibratePhase1(self, event):
         status=os.system("grompp -f ./scritps/nvt.mdp -c em.gro -p topol.top -o nvt.tpr")
         if(status != 0):
