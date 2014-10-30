@@ -424,7 +424,7 @@ class MyMainWindow(wx.Frame):
         if(status1 == 0):
             status2=os.system("mdrun -v -deffnm npt")
             if(status2 == 0):
-                os.system("echo 15 0|gmx energy -f npt.edr -o pressure.xvg")
+                os.system("echo 16 0|gmx energy -f npt.edr -o pressure.xvg")
                 self.drawPressurevsTime(event)
                 self.SetStatusText('Completed NVT equilibration succesfully!\n')
         else:

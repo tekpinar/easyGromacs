@@ -429,6 +429,18 @@ class MyMainWindow(wx.Frame):
                 self.SetStatusText('Completed NVT equilibration succesfully!\n')
         else:
             print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
+
+    def OnProduction(self, event):
+        pre_production_command="grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr"
+        if(version<5.0):
+            pre_production_command=pre_production_command
+
+        elif(version>=5.0):
+            pre_production_command="gmx "+pre_production_command
+
+        status1=os.system(pre_phase2_command)
+        if(status1 != 0):
+            print "ERROR: Hey dude! I think something went wrong in Pre Production run!"
     
     def OnQuit(self, e):
         self.Close()
