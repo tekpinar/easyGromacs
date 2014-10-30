@@ -22,55 +22,29 @@ class MyMenuBar(wx.Frame):
         fileMenu.Append(wx.ID_NEW, '&New')
         fileMenu.Append(wx.ID_OPEN, '&Open')
         fileMenu.Append(wx.ID_SAVE, '&Save')
+        fileMenu.Append(wx.ID_EXIT, '&Quit')
         fileMenu.AppendSeparator()
 
-        prepareMenu=wx.Menu()
-        prepareMenu.Append(wx.ID_ANY, '&Select Water Model')
-        prepareMenu.Append(wx.ID_ANY, '&Select Force Field')
-        prepareMenu.Append(wx.ID_ANY, '&Solvate')
-        prepareMenu.Append(wx.ID_ANY, '&Add Ions')
+        helpMenu=wx.Menu()
+        helpMenu.Append(wx.ID_ANY, '&Bevan Lab Tutorial Web Page')
+        helpMenu.Append(wx.ID_ANY, '&About')
 
-        minimizeMenu=wx.Menu()
-        minimizeMenu.Append(wx.ID_ANY, '&Preprocess')
-        minimizeMenu.Append(wx.ID_ANY, '&Select method')
+#        qmi = wx.MenuItem(fileMenu, wx.ID_EXIT, '&Quit\tCtrl+W')
+#        fileMenu.AppendItem(qmi)
 
-        equilibrateMenu=wx.Menu()
-        equilibrateMenu.Append(wx.ID_ANY, '&Temperature')
-        equilibrateMenu.Append(wx.ID_ANY, '&Phase 1: NVT')
-        equilibrateMenu.Append(wx.ID_ANY, '&Phase 2: NPT')
-
-        productionMenu=wx.Menu()
-        productionMenu.Append(wx.ID_ANY, '&Preprocess')
-        productionMenu.Append(wx.ID_ANY, '&TimeSteps')
-        productionMenu.Append(wx.ID_ANY, '&Run')
-
-        imp = wx.Menu()
-        imp.Append(wx.ID_ANY, 'Import newsfeed list...')
-        imp.Append(wx.ID_ANY, 'Import bookmarks...')
-        imp.Append(wx.ID_ANY, 'Import mail...')
-        fileMenu.AppendMenu(wx.ID_ANY, 'I&mport', imp)
-
-        qmi = wx.MenuItem(fileMenu, wx.ID_EXIT, '&Quit\tCtrl+W')
-        fileMenu.AppendItem(qmi)
-
-#        self.Bind(wx.EVT_MENU, self.OnQuit, qmi)
 
         menubar.Append(fileMenu, '&File')
-        menubar.Append(prepareMenu, '&Prepare')
-        menubar.Append(minimizeMenu, '&Minimize')
-        menubar.Append(equilibrateMenu, '&Equilibrate')
-        menubar.Append(productionMenu, '&MD Production')
+        menubar.Append(helpMenu, '&Help')
         
         #Menubar events
 #        self.Bind(wx.EVT_MENU, self.OnOpen, fileMenu)
-#        self.Bind(wx.EVT_MENU, self.OnMinimize, minimizeMenu)
-
+#        self.Bind(wx.EVT_MENU, self.OnExit, fileMenu)
         self.SetMenuBar(menubar)
 
 class MyMainWindow(wx.Frame):
 
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(800, 600))
+        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(900, 775))
 
         #Box parameters
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -137,7 +111,7 @@ class MyMainWindow(wx.Frame):
 
         #Menubar
         myNewMenuBar=MyMenuBar(self, -1, "test")
-        self.SetSize((800, 600))
+        self.SetSize((900, 775))
 
     def changePlot(self, event):
         if self.current_draw == 'sin' :
@@ -429,6 +403,17 @@ class MyMainWindow(wx.Frame):
                 self.SetStatusText('Completed NVT equilibration succesfully!\n')
         else:
             print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
+
+    def OnProduction(self, event):
+        pre_production_command="grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr"
+        if(version<5.0):
+            pre_production_command=pre_production_command
+        elif(version>=5.0):
+            pre_production_command="gmx "+pre_production_command
+
+        status1=os.system(pre_production_command)
+        if(status1 != 0):
+            print "ERROR: Hey dude! I think something went wrong in Pre Production run!"
     
     def OnQuit(self, e):
         self.Close()
