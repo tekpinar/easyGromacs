@@ -2,6 +2,8 @@
 
 import wx
 import os
+import re
+import subprocess
 import numpy
 import matplotlib
 from matplotlib.figure import Figure
@@ -11,6 +13,22 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Navigation
 solvent_model=""
 version=5.02
 #version=4.5
+def findThisProcess( process_name ):
+    ps     = subprocess.Popen("ps -eaf | grep "+process_name, shell=True, stdout=subprocess.PIPE)
+    output = ps.stdout.read()
+    ps.stdout.close()
+    ps.wait()
+
+    return output
+
+# This is the function you can use  
+def isThisRunning( process_name ):
+    output = findThisProcess( process_name )
+    
+    if re.search(process_name, output) is None:
+        return False
+    else:
+        return True
 
 class MyMenuBar(wx.Frame):
     def __init__(self, parent, id, title):
@@ -27,7 +45,7 @@ class MyMenuBar(wx.Frame):
 
         helpMenu=wx.Menu()
         helpMenu.Append(wx.ID_ANY, '&Bevan Lab Tutorial Web Page')
-        helpMenu.Append(wx.ID_ANY, '&About')
+        about_menu_item=helpMenu.Append(wx.ID_ANY, '&About')
 
 #        qmi = wx.MenuItem(fileMenu, wx.ID_EXIT, '&Quit\tCtrl+W')
 #        fileMenu.AppendItem(qmi)
@@ -39,7 +57,15 @@ class MyMenuBar(wx.Frame):
         #Menubar events
 #        self.Bind(wx.EVT_MENU, self.OnOpen, fileMenu)
 #        self.Bind(wx.EVT_MENU, self.OnExit, fileMenu)
+        self.Bind(wx.EVT_MENU, self.OnAboutDlg, about_menu_item)
         self.SetMenuBar(menubar)
+
+    def OnAboutDlg(self, event):
+        info = wx.AboutDialogInfo()
+        info.Name = "Quick and Dirty Gromacs Tutorial"
+#        info.Version = "0.0.1 Beta"
+        info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
+        wx.AboutBox(info)
 
 class MyMainWindow(wx.Frame):
 
@@ -111,7 +137,7 @@ class MyMainWindow(wx.Frame):
 
         #Menubar
         myNewMenuBar=MyMenuBar(self, -1, "test")
-        self.SetSize((900, 775))
+        self.SetSize((800, 600))
 
     def changePlot(self, event):
         if self.current_draw == 'sin' :
@@ -357,12 +383,11 @@ class MyMainWindow(wx.Frame):
         status1=os.system(pre_min_command)
         if(status1 == 0):
             status2=os.system("mdrun -v -deffnm em 1>em.out 2>em.err")
-
-            if (status2==0):
-                os.system("echo 10 0|g_energy -f em.edr -o potential.xvg")
-                self.changePlot(event)
+            if(status2==0):
+                status2=os.system("echo 10 0|g_energy -f em.edr -o potential.xvg")
+#                    self.changePlot(event)
                 self.drawPotential(event)
-                self.SetStatusText('Completed minimization succesfully!\n')
+            self.SetStatusText('Completed minimization succesfully!\n')
         else:
             print "ERROR: Hey dude! I think something is really wrong here in minimization!"                
 
