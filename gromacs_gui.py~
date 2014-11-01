@@ -1,16 +1,18 @@
 #!/usr/bin/env python
-
 import wx
 import os
 import re
 import subprocess
 import numpy
+from functools import partial
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as NavigationToolbar
 
 solvent_model=""
+base=""
+dir=""
 version=5.02
 #version=4.5
 def findThisProcess( process_name ):
@@ -63,7 +65,7 @@ class MyMenuBar(wx.Frame):
     def OnAboutDlg(self, event):
         info = wx.AboutDialogInfo()
         info.Name = "Quick and Dirty Gromacs Tutorial"
-#        info.Version = "0.0.1 Beta"
+        info.Version = "0.0.1 Beta"
         info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
         wx.AboutBox(info)
 
@@ -124,10 +126,14 @@ class MyMainWindow(wx.Frame):
 
         #Toolbar events
         self.Bind(wx.EVT_TOOL, self.OnNew, id=1)
-        self.Bind(wx.EVT_TOOL, self.OnOpen, id=2)
+#        self.Bind(wx.EVT_TOOL, self.OnOpen, id=2)
+        self.Bind(wx.EVT_TOOL, self.openfile, id=2)
         self.Bind(wx.EVT_TOOL, self.OnSave, id=3)
         self.Bind(wx.EVT_TOOL, self.OnExit, id=4)
-        self.Bind(wx.EVT_TOOL, self.prepare, id=7)
+#        self.Bind(wx.EVT_TOOL, lambda event: self.OnPrepare(event, base), id=7) 
+#        self.Bind(wx.EVT_TOOL, lambda event: self.OnPrepare(event, base)) 
+#        self.Bind(wx.EVT_TOOL, partial( self.OnPrepare, base), id=7)
+        self.Bind(wx.EVT_TOOL, self.OnPrepare, id=7)
         self.Bind(wx.EVT_TOOL, self.solvate, id=9)
         self.Bind(wx.EVT_TOOL, self.ionize, id=10)
         self.Bind(wx.EVT_TOOL, self.OnMinimize, id=11)
@@ -157,7 +163,7 @@ class MyMainWindow(wx.Frame):
         self.axes.plot(x, y)
 
     def drawPotential(self, event):
-        data_file=open("potential.xvg", "r")
+        data_file=open(dir+"/potential.xvg", "r")
         lines=data_file.readlines()
         md_columns=[]
         md_pc1=[]
@@ -180,7 +186,7 @@ class MyMainWindow(wx.Frame):
 
         
     def drawTemperaturevsTime(self, event):
-        data_file=open("temperature.xvg", "r")
+        data_file=open(dir+"/temperature.xvg", "r")
         lines=data_file.readlines()
         md_columns=[]
         md_pc1=[]
@@ -239,6 +245,21 @@ class MyMainWindow(wx.Frame):
     def OnExit(self, event):
         self.Close()
 
+    def openfile(self, event):
+       dlg = wx.FileDialog(self, "Choose an initial pdb file", os.getcwd(), "", "*.pdb", wx.OPEN)
+       if dlg.ShowModal() == wx.ID_OK:
+           path = dlg.GetPath()
+           global base
+           global dir
+           base = os.path.basename(path)
+           dir  = os.path.dirname(path)
+           myFileDataList=[dir, base]
+           #                self.SetStatusText("You selected: %s" % base)
+           #                self.SetStatusText("You selected: %s" % dir)
+           self.SetStatusText("You selected: %s" % path)
+       dlg.Destroy()
+       return dlg.GetFilename()
+
     def waterchoice(self, event):
         wm = ['SPC', 'SPCE', 'TIP3P', 'TIP4P']
         dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', wm, wx.CHOICEDLG_STYLE)
@@ -269,26 +290,26 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
         return dlg.GetStringSelection()
 
-    def openfile(self, event):
-       dlg = wx.FileDialog(self, "Choose an initial pdb file", os.getcwd(), "", "*.pdb", wx.OPEN)
-       if dlg.ShowModal() == wx.ID_OK:
-                path = dlg.GetPath()
-                mypath = os.path.basename(path)
-                self.SetStatusText("You selected: %s" % mypath)
-       dlg.Destroy()
-       return dlg.GetFilename()
 
-    def prepare(self, event):
-        initial_pdb=self.openfile(event)
+    def OnPrepare(self, event):
+#        initial_pdb=self.openfile(event)
+         #This / makes it very unix dependent!!!
+        initial_pdb=dir+"/"+base
+#        print dir
         global solvent_model 
         if(initial_pdb != ""):
             solvent_model=self.waterchoice(event)
-            force_field=self.ffchoice(event)
-            prepare_command="pdb2gmx -f "+initial_pdb+" -o processed.pdb -water "+solvent_model.lower()+" -ff "+force_field[0:14]
-            if(version<5.0):
-                os.system(prepare_command)
-            elif(version>=5):
-                os.system("gmx "+prepare_command)
+            if(solvent_model!=""):
+                force_field=self.ffchoice(event)
+
+                #This / makes it very unix dependent!!!
+#                os.system("cd "+dir)
+                prepare_command="pdb2gmx -f "+initial_pdb+" -o "+dir+"/"+"processed.pdb -i "+dir+"/"+"posre.itp -p "+dir+"/"+"topol.top -water "\
+                    +solvent_model.lower()+" -ff "+force_field[0:14]
+                if(version<5.0):
+                    os.system(prepare_command)
+                elif(version>=5):
+                    os.system("gmx "+prepare_command)
 
     def boxtypechoice(self, event):
         bt = ['Cubic', 'Triclinic', 'Dodecahedron']
@@ -302,17 +323,17 @@ class MyMainWindow(wx.Frame):
         #Define box properties
         boxtype=self.boxtypechoice(event)
         error_message="ERROR: Hey dude! Something went wrong in solvation precedure! Check log files!"
-        presolvate_command="editconf -f processed.pdb -o newbox.pdb -bt "+boxtype+" -c -d 1.0"
+        presolvate_command="editconf -f "+dir+"/"+"processed.pdb -o "+dir+"/"+"newbox.pdb -bt "+boxtype+" -c -d 1.0"
         if(boxtype != ""):
             if(version<5.0):
                 status=os.system(presolvate_command)
                 if(status==0):
                     #Produce box
                     if ( solvent_model.lower() == "tip3p"  or  solvent_model == "spc"  or  solvent_model == "spce"):
-                        os.system("genbox -cp newbox.pdb -cs spc216.gro -o solvated.pdb -p topol.top")
+                        os.system("genbox -cp "+dir+"/"+"newbox.pdb -cs spc216.gro -o "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top")
                     
                     elif (solvent_model == "tip4p"):
-                        os.system("genbox -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
+                        os.system("genbox -cp "+dir+"/"+"newbox.pdb -cs tip4p.gro -o "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top")
                 else:
                     print (error_message)
             elif(version>=5.0):
@@ -320,10 +341,10 @@ class MyMainWindow(wx.Frame):
                 if(status==0):
                     #Produce box
                     if ( solvent_model.lower() == "tip3p"  or  solvent_model == "spc"  or  solvent_model == "spce"):
-                        os.system("gmx solvate -cp newbox.pdb -cs spc216.gro -o solvated.pdb -p topol.top")
+                        os.system("gmx solvate -cp "+dir+"/"+"newbox.pdb -cs spc216.gro -o "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top")
                     
                     elif (solvent_model == "tip4p"):
-                        os.system("gmx solvate -cp newbox.pdb -cs tip4p.gro -o solvated.pdb -p topol.top")
+                        os.system("gmx solvate -cp "+dir+"/"+"newbox.pdb -cs tip4p.gro -o "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top")
                 else:
                     print (error_message)
 
@@ -347,8 +368,9 @@ class MyMainWindow(wx.Frame):
         pos_ion=self.pos_iontypechoice(event)
         neg_ion=self.neg_iontypechoice(event)
         #Prepare for ion addition
-        preprocess_command="-c solvated.pdb -p topol.top -o ions.tpr"
-        ionize_command="genion -s ions.tpr -o solv_ions.pdb -p topol.top -pname "+pos_ion+" -nname "+neg_ion+" -neutral -conc 0.15"
+        preprocess_command="-c "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"ions.tpr"
+        ionize_command="genion -s "+dir+"/"+"ions.tpr -o "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -pname "+\
+            pos_ion+" -nname "+neg_ion+" -neutral -conc 0.15"
         error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
         if(version<5.0):
             status=os.system("grompp -f ./scripts/gromacs_less_than_5/ions.mdp "+preprocess_command)
@@ -374,7 +396,7 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
 
     def OnMinimize(self, event):
-        pre_min_command=" -c solv_ions.pdb -p topol.top -o em.tpr"
+        pre_min_command=" -c "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"em.tpr"
         if(version<5.0):
             pre_min_command="grompp -f ./scripts/gromacs_less_than_5/minim.mdp"+pre_min_command
         elif(version>=5.0):
@@ -382,9 +404,9 @@ class MyMainWindow(wx.Frame):
 
         status1=os.system(pre_min_command)
         if(status1 == 0):
-            status2=os.system("mdrun -v -deffnm em 1>em.out 2>em.err")
+            status2=os.system("mdrun -v -deffnm "+dir+"/"+"em 1>"+dir+"/"+"em.out 2>"+dir+"/"+"em.err")
             if(status2==0):
-                status2=os.system("echo 10 0|g_energy -f em.edr -o potential.xvg")
+                status2=os.system("echo 10 0|g_energy -f "+dir+"/"+"em.edr -o "+dir+"/"+"potential.xvg")
 #                    self.changePlot(event)
                 self.drawPotential(event)
             self.SetStatusText('Completed minimization succesfully!\n')
@@ -392,7 +414,7 @@ class MyMainWindow(wx.Frame):
             print "ERROR: Hey dude! I think something is really wrong here in minimization!"                
 
     def OnEquilibratePhase1(self, event):
-        pre_phase1_command=" -c em.gro -p topol.top -o nvt.tpr"
+        pre_phase1_command=" -c "+dir+"/"+"em.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"nvt.tpr"
         if(version<5.0):
             pre_phase1_command="grompp -f ./scripts/gromacs_less_than_5/nvt.mdp"+pre_phase1_command
         elif(version>=5.0):
@@ -400,9 +422,9 @@ class MyMainWindow(wx.Frame):
 
         status1=os.system(pre_phase1_command)
         if(status1 == 0):
-            status2=os.system("mdrun -v -deffnm nvt")
+            status2=os.system("mdrun -v -deffnm "+dir+"/"+"nvt")
             if(status2 == 0):
-                os.system("echo 15 0|gmx energy -f nvt.edr -o temperature.xvg")
+                os.system("echo 15 0|gmx energy -f "+dir+"/"+"nvt.edr -o "+dir+"/"+"temperature.xvg")
                 self.drawTemperaturevsTime(event)
                 self.SetStatusText('Completed NVT equilibration succesfully!\n')
         else:
@@ -413,7 +435,7 @@ class MyMainWindow(wx.Frame):
 #        self.Show(True)
 
     def OnEquilibratePhase2(self, event):
-        pre_phase2_command=" -c nvt.gro -p topol.top -o npt.tpr"
+        pre_phase2_command=" -c "+dir+"/"+"nvt.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"npt.tpr"
         if(version<5.0):
             pre_phase2_command="grompp -f ./scripts/gromacs_less_than_5/npt.mdp"+pre_phase2_command
         elif(version>=5.0):
@@ -421,16 +443,16 @@ class MyMainWindow(wx.Frame):
 
         status1=os.system(pre_phase2_command)
         if(status1 == 0):
-            status2=os.system("mdrun -v -deffnm npt")
+            status2=os.system("mdrun -v -deffnm "+dir+"/"+"npt")
             if(status2 == 0):
-                os.system("echo 16 0|gmx energy -f npt.edr -o pressure.xvg")
+                os.system("echo 16 0|gmx energy -f "+dir+"/"+"npt.edr -o "+dir+"/"+"pressure.xvg")
                 self.drawPressurevsTime(event)
                 self.SetStatusText('Completed NVT equilibration succesfully!\n')
         else:
             print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
 
     def OnProduction(self, event):
-        pre_production_command="grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr"
+        pre_production_command="grompp -f md.mdp -c "+dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
         if(version<5.0):
             pre_production_command=pre_production_command
         elif(version>=5.0):
