@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 import wx
 import os
-import re
-import subprocess
+import webbrowser
 import numpy
-from functools import partial
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -15,64 +13,10 @@ base=""
 dir=""
 version=5.02
 #version=4.5
-def findThisProcess( process_name ):
-    ps     = subprocess.Popen("ps -eaf | grep "+process_name, shell=True, stdout=subprocess.PIPE)
-    output = ps.stdout.read()
-    ps.stdout.close()
-    ps.wait()
-
-    return output
-
-# This is the function you can use  
-def isThisRunning( process_name ):
-    output = findThisProcess( process_name )
-    
-    if re.search(process_name, output) is None:
-        return False
-    else:
-        return True
-
-class MyMenuBar(wx.Frame):
-    def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(900, 775))
-        #Menubar
-        menubar = wx.MenuBar()
-
-        fileMenu = wx.Menu()
-        fileMenu.Append(wx.ID_NEW, '&New')
-        fileMenu.Append(wx.ID_OPEN, '&Open')
-        fileMenu.Append(wx.ID_SAVE, '&Save')
-        fileMenu.Append(wx.ID_EXIT, '&Quit')
-        fileMenu.AppendSeparator()
-
-        helpMenu=wx.Menu()
-        helpMenu.Append(wx.ID_ANY, '&Bevan Lab Tutorial Web Page')
-        about_menu_item=helpMenu.Append(wx.ID_ANY, '&About')
-
-#        qmi = wx.MenuItem(fileMenu, wx.ID_EXIT, '&Quit\tCtrl+W')
-#        fileMenu.AppendItem(qmi)
-
-
-        menubar.Append(fileMenu, '&File')
-        menubar.Append(helpMenu, '&Help')
-        
-        #Menubar events
-#        self.Bind(wx.EVT_MENU, self.OnOpen, fileMenu)
-#        self.Bind(wx.EVT_MENU, self.OnExit, fileMenu)
-        self.Bind(wx.EVT_MENU, self.OnAboutDlg, about_menu_item)
-        self.SetMenuBar(menubar)
-
-    def OnAboutDlg(self, event):
-        info = wx.AboutDialogInfo()
-        info.Name = "Quick and Dirty Gromacs Tutorial"
-        info.Version = "0.0.1 Beta"
-        info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
-        wx.AboutBox(info)
 
 class MyMainWindow(wx.Frame):
-
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(900, 775))
+        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(800, 600))
 
         #Box parameters
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -126,13 +70,9 @@ class MyMainWindow(wx.Frame):
 
         #Toolbar events
         self.Bind(wx.EVT_TOOL, self.OnNew, id=1)
-#        self.Bind(wx.EVT_TOOL, self.OnOpen, id=2)
         self.Bind(wx.EVT_TOOL, self.openfile, id=2)
         self.Bind(wx.EVT_TOOL, self.OnSave, id=3)
         self.Bind(wx.EVT_TOOL, self.OnExit, id=4)
-#        self.Bind(wx.EVT_TOOL, lambda event: self.OnPrepare(event, base), id=7) 
-#        self.Bind(wx.EVT_TOOL, lambda event: self.OnPrepare(event, base)) 
-#        self.Bind(wx.EVT_TOOL, partial( self.OnPrepare, base), id=7)
         self.Bind(wx.EVT_TOOL, self.OnPrepare, id=7)
         self.Bind(wx.EVT_TOOL, self.solvate, id=9)
         self.Bind(wx.EVT_TOOL, self.ionize, id=10)
@@ -142,9 +82,62 @@ class MyMainWindow(wx.Frame):
 #        self.Bind(wx.EVT_TOOL, self.tempentry, id=12)
 
         #Menubar
-        myNewMenuBar=MyMenuBar(self, -1, "test")
-        self.SetSize((800, 600))
+        menubar = wx.MenuBar()
 
+        fileMenu = wx.Menu()
+        open_menu_item=fileMenu.Append(wx.ID_OPEN, '&Open')
+        fileMenu.AppendSeparator()
+        quit_menu_item=fileMenu.Append(103, '&Quit', 'Quit Application')
+
+        helpMenu=wx.Menu()
+        tutorial_menu_item=helpMenu.Append(wx.ID_ANY, '&Bevan Lab Tutorial Web Page')
+        about_menu_item=helpMenu.Append(wx.ID_ANY, '&About')
+
+        menubar.Append(fileMenu, '&File')
+        menubar.Append(helpMenu, '&Help')
+        
+        #Menubar events
+        self.Bind(wx.EVT_MENU, self.openfile, open_menu_item)
+        self.Bind(wx.EVT_MENU, self.OnExit, quit_menu_item, id=103)
+        self.Bind(wx.EVT_MENU, self.OnAboutDlg, about_menu_item)
+        self.Bind(wx.EVT_MENU, self.OnOpenTutorial, tutorial_menu_item)
+        self.SetMenuBar(menubar)
+
+    def OnAboutDlg(self, event):
+        info = wx.AboutDialogInfo()
+        info.Name = "Quick and Dirty Gromacs Tutorial"
+        info.Version = "0.0.1 Beta"
+        info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
+        wx.AboutBox(info)
+
+    def OnOpenTutorial(self, event):
+        url="http://www.bevanlab.biochem.vt.edu/Pages/Personal/justin/gmx-tutorials/lysozyme/"
+        webbrowser.open_new(url)
+
+    def openfile(self, event):
+       dlg = wx.FileDialog(self, "Choose an initial pdb file", os.getcwd(), "", "*.pdb", wx.OPEN)
+       if dlg.ShowModal() == wx.ID_OK:
+           path = dlg.GetPath()
+           global base
+           global dir
+           base = os.path.basename(path)
+           dir  = os.path.dirname(path)
+           myFileDataList=[dir, base]
+           #                self.SetStatusText("You selected: %s" % base)
+           #                self.SetStatusText("You selected: %s" % dir)
+           self.SetStatusText("You selected: %s" % path)
+       dlg.Destroy()
+       return dlg.GetFilename()
+
+    def OnExit(self, event):
+        self.Close(True)
+
+    def OnNew(self, event):
+        self.statusbar.SetStatusText('New Command')
+
+    def OnSave(self, event):
+        self.statusbar.SetStatusText('Save Command')
+    
     def changePlot(self, event):
         if self.current_draw == 'sin' :
             self.drawLines()
@@ -229,37 +222,6 @@ class MyMainWindow(wx.Frame):
         data_file.close()
         self.Layout()
 
-    def OnNew(self, event):
-        self.statusbar.SetStatusText('New Command')
-
-    def OnOpen(self, event):
-        wildcard = 'Protein Data Bank Files (*.pdb)|*.pdb|'\
-            'All files (*.pdb1)|*.pdb1'
-        dlg_fo = wx.FileDialog(None, 'Select input file', os.getcwd(), '', wildcard, wx.OPEN)
-        if dlg_fo.ShowModal() == wx.ID_OK:
-            print dlg_fo.GetPath()
-
-    def OnSave(self, event):
-        self.statusbar.SetStatusText('Save Command')
-    
-    def OnExit(self, event):
-        self.Close()
-
-    def openfile(self, event):
-       dlg = wx.FileDialog(self, "Choose an initial pdb file", os.getcwd(), "", "*.pdb", wx.OPEN)
-       if dlg.ShowModal() == wx.ID_OK:
-           path = dlg.GetPath()
-           global base
-           global dir
-           base = os.path.basename(path)
-           dir  = os.path.dirname(path)
-           myFileDataList=[dir, base]
-           #                self.SetStatusText("You selected: %s" % base)
-           #                self.SetStatusText("You selected: %s" % dir)
-           self.SetStatusText("You selected: %s" % path)
-       dlg.Destroy()
-       return dlg.GetFilename()
-
     def waterchoice(self, event):
         wm = ['SPC', 'SPCE', 'TIP3P', 'TIP4P']
         dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', wm, wx.CHOICEDLG_STYLE)
@@ -270,20 +232,20 @@ class MyMainWindow(wx.Frame):
 
     def ffchoice(self, event):
         ffm = ['amber03            -AMBER03 protein, nucleic AMBER94 (Duan et al., J. Comp. Chem. 24, 1999-2012, 2003)',\
-                   'amber94        -AMBER94 force field (Cornell et al., JACS 117, 5179-5197, 1995)',\
-                    'amber96       -AMBER96 protein, nucleic AMBER94 (Kollman et al., Acc. Chem. Res. 29, 461-469, 1996)',\
-                    'amber99       -AMBER99 protein, nucleic AMBER94 (Wang et al., J. Comp. Chem. 21, 1049-1074, 2000)',\
-                    'amber99sb     -AMBER99SB protein, nucleic AMBER94 (Hornak et al., Proteins 65, 712-725, 2006)',\
-                    'amber99sb-ildn-AMBER99SB-ILDN protein, nucleic AMBER94 (Lindorff-Larsen et al., Proteins 78, 1950-58, 2010)',\
-                    'amberGS       -AMBERGS force field (Garcia & Sanbonmatsu, PNAS 99, 2782-2787, 2002)',\
-                    'charmm27      -CHARMM27 all-atom force field (CHARM22 plus CMAP for proteins)',\
-                    'gromos43a1    -GROMOS96 43a1 force field',\
-                    'gromos43a2    -GROMOS96 43a2 force field (improved alkane dihedrals)',\
-                    'gromos45a3    -GROMOS96 45a3 force field (Schuler JCC 2001 22 1205)',\
-                    'gromos53a5    -GROMOS96 53a5 force field (JCC 2004 vol 25 pag 1656)',\
-                    'gromos53a6    -GROMOS96 53a6 force field (JCC 2004 vol 25 pag 1656)',\
-                    'gromos54a7    -GROMOS96 54a7 force field (Eur. Biophys. J. (2011), 40,, 843-856, DOI: 10.1007/s00249-011-0700-9)',\
-                    'oplsaa        -OPLS-AA/L all-atom force field (2001 aminoacid dihedrals)']
+                   'amber94       -AMBER94 force field (Cornell et al., JACS 117, 5179-5197, 1995)',\
+                   'amber96       -AMBER96 protein, nucleic AMBER94 (Kollman et al., Acc. Chem. Res. 29, 461-469, 1996)',\
+                   'amber99       -AMBER99 protein, nucleic AMBER94 (Wang et al., J. Comp. Chem. 21, 1049-1074, 2000)',\
+                   'amber99sb     -AMBER99SB protein, nucleic AMBER94 (Hornak et al., Proteins 65, 712-725, 2006)',\
+                   'amber99sb-ildn-AMBER99SB-ILDN protein, nucleic AMBER94 (Lindorff-Larsen et al., Proteins 78, 1950-58, 2010)',\
+                   'amberGS       -AMBERGS force field (Garcia & Sanbonmatsu, PNAS 99, 2782-2787, 2002)',\
+                   'charmm27      -CHARMM27 all-atom force field (CHARM22 plus CMAP for proteins)',\
+                   'gromos43a1    -GROMOS96 43a1 force field',\
+                   'gromos43a2    -GROMOS96 43a2 force field (improved alkane dihedrals)',\
+                   'gromos45a3    -GROMOS96 45a3 force field (Schuler JCC 2001 22 1205)',\
+                   'gromos53a5    -GROMOS96 53a5 force field (JCC 2004 vol 25 pag 1656)',\
+                   'gromos53a6    -GROMOS96 53a6 force field (JCC 2004 vol 25 pag 1656)',\
+                   'gromos54a7    -GROMOS96 54a7 force field (Eur. Biophys. J. (2011), 40,, 843-856, DOI: 10.1007/s00249-011-0700-9)',\
+                   'oplsaa        -OPLS-AA/L all-atom force field (2001 aminoacid dihedrals)']
         dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', ffm, wx.CHOICEDLG_STYLE)
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You chose: %s\n' % dlg.GetStringSelection())
@@ -292,7 +254,6 @@ class MyMainWindow(wx.Frame):
 
 
     def OnPrepare(self, event):
-#        initial_pdb=self.openfile(event)
          #This / makes it very unix dependent!!!
         initial_pdb=dir+"/"+base
 #        print dir
@@ -430,10 +391,6 @@ class MyMainWindow(wx.Frame):
         else:
             print "ERROR: Hey dude! I think something went wrong in NVT simulation!"
 
-#        self.SetTitle('Quick and Dirty Gromacs')
-#        self.Centre()
-#        self.Show(True)
-
     def OnEquilibratePhase2(self, event):
         pre_phase2_command=" -c "+dir+"/"+"nvt.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"npt.tpr"
         if(version<5.0):
@@ -481,7 +438,6 @@ class p1(wx.Panel):
 class MyApp(wx.App):
     def OnInit(self):
         frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs Tutorial')
-#        frame = TestFrame(None, 'Hello World!')
         frame.Show(True)
         return True
 
