@@ -252,7 +252,6 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
         return dlg.GetStringSelection()
 
-
     def OnPrepare(self, event):
          #This / makes it very unix dependent!!!
         initial_pdb=dir+"/"+base
@@ -280,9 +279,21 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
         return dlg.GetStringSelection().lower()
 
+    def set_buffer_distance(self, event):
+        dlg = wx.TextEntryDialog(self, 'Unit (nm)','Buffer distance')
+        dlg.SetValue("1.0")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.SetStatusText('You entered: %s\n' % dlg.GetValue())
+            return dlg.GetValue()
+        else:
+            return (-1)
+        
+        dlg.Destroy()
+
     def solvate(self, event):
         #Define box properties
         boxtype=self.boxtypechoice(event)
+        buffer=self.set_buffer_distance(event)
         error_message="ERROR: Hey dude! Something went wrong in solvation precedure! Check log files!"
         presolvate_command="editconf -f "+dir+"/"+"processed.pdb -o "+dir+"/"+"newbox.pdb -bt "+boxtype+" -c -d 1.0"
         if(boxtype != ""):
@@ -312,10 +323,23 @@ class MyMainWindow(wx.Frame):
     def pos_iontypechoice(self, event):
         lst = ["Na", "K", "Ca", "Mg"]
         dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
+#        dlg=wx.RadioBox(panel, -1, "A Radio Box", (10, 10), wx.DefaultSize, lst, 2, wx.RA_SPECIFY_COLS)
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
         dlg.Destroy()
         return dlg.GetStringSelection().upper()
+
+    def pos_iontypechoice_new(self, event):
+        lst = ["Na", "K", "Ca", "Mg"]
+#        dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
+        panel = wx.Panel(self, -1)
+        rb1 = wx.RadioButton(panel, label='Value A', pos=(10, 10), style=wx.RB_GROUP)
+#        dlg=wx.RadioBox(panel, -1, "A Radio Box", (20, 20), wx.DefaultSize, lst, 2, wx.RA_SPECIFY_COLS)
+#        if dlg.GetStringSelection() != "":
+#            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
+
+#        return dlg.GetStringSelection().upper()
+#        dlg.Destroy()
 
     def neg_iontypechoice(self, event):
         lst = ["Cl"]
@@ -331,11 +355,11 @@ class MyMainWindow(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You entered: %s\n' % dlg.GetValue())
             return dlg.GetValue()
-
-        elif dlg.ShowModal() ==wx.ID_CANCEL:
+        else:
             return (-1)
         
         dlg.Destroy()
+
 
     def ionize(self, event):
         pos_ion=self.pos_iontypechoice(event)
