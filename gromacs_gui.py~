@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import wx
 import os
-#import re
 import webbrowser
 import numpy
 import matplotlib
@@ -14,22 +13,6 @@ base=""
 dir=""
 version=5.02
 #version=4.5
-#def findThisProcess( process_name ):
-#    ps     = subprocess.Popen("ps -eaf | grep "+process_name, shell=True, stdout=subprocess.PIPE)
-#    output = ps.stdout.read()
-#    ps.stdout.close()
-#    ps.wait()
-
-#    return output
-
-# This is the function you can use  
-#def isThisRunning( process_name ):
-#    output = findThisProcess( process_name )
-#    
-#    if re.search(process_name, output) is None:
-#        return False
-#    else:
-#        return True
 
 class MyMainWindow(wx.Frame):
     def __init__(self, parent, id, title):
@@ -271,7 +254,6 @@ class MyMainWindow(wx.Frame):
 
 
     def OnPrepare(self, event):
-#        initial_pdb=self.openfile(event)
          #This / makes it very unix dependent!!!
         initial_pdb=dir+"/"+base
 #        print dir
@@ -343,13 +325,31 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
         return dlg.GetStringSelection().upper()
 
+    def set_ion_concentration(self, event):
+        dlg = wx.TextEntryDialog(self, 'Ion concentration (M/L):','Would you like to set ion concentration?')
+        dlg.SetValue("0.15")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.SetStatusText('You entered: %s\n' % dlg.GetValue())
+            return dlg.GetValue()
+
+        elif dlg.ShowModal() ==wx.ID_CANCEL:
+            return (-1)
+        
+        dlg.Destroy()
+
     def ionize(self, event):
         pos_ion=self.pos_iontypechoice(event)
         neg_ion=self.neg_iontypechoice(event)
+        ion_concentration=self.set_ion_concentration(event)
+
         #Prepare for ion addition
         preprocess_command="-c "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"ions.tpr"
         ionize_command="genion -s "+dir+"/"+"ions.tpr -o "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -pname "+\
-            pos_ion+" -nname "+neg_ion+" -neutral -conc 0.15"
+            pos_ion+" -nname "+neg_ion+" -neutral"
+
+        if(ion_concentration !=(-1)):
+            ionize_command=ionize_command+" -conc 0.15"    
+
         error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
         if(version<5.0):
             status=os.system("grompp -f ./scripts/gromacs_less_than_5/ions.mdp "+preprocess_command)
@@ -373,6 +373,7 @@ class MyMainWindow(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You entered: %s\n' % dlg.GetValue())
         dlg.Destroy()
+
 
     def OnMinimize(self, event):
         pre_min_command=" -c "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"em.tpr"
@@ -408,10 +409,6 @@ class MyMainWindow(wx.Frame):
                 self.SetStatusText('Completed NVT equilibration succesfully!\n')
         else:
             print "ERROR: Hey dude! I think something went wrong in NVT simulation!"
-
-#        self.SetTitle('Quick and Dirty Gromacs')
-#        self.Centre()
-#        self.Show(True)
 
     def OnEquilibratePhase2(self, event):
         pre_phase2_command=" -c "+dir+"/"+"nvt.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"npt.tpr"
@@ -460,7 +457,6 @@ class p1(wx.Panel):
 class MyApp(wx.App):
     def OnInit(self):
         frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs Tutorial')
-#        frame = TestFrame(None, 'Hello World!')
         frame.Show(True)
         return True
 

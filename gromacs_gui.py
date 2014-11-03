@@ -325,13 +325,30 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
         return dlg.GetStringSelection().upper()
 
+    def set_ion_concentration(self, event):
+        dlg = wx.TextEntryDialog(self, 'Ion concentration (M/L):','Would you like to set ion concentration?')
+        dlg.SetValue("0.15")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.SetStatusText('You entered: %s\n' % dlg.GetValue())
+            return dlg.GetValue()
+        else:
+            return (-1)
+        
+        dlg.Destroy()
+
     def ionize(self, event):
         pos_ion=self.pos_iontypechoice(event)
         neg_ion=self.neg_iontypechoice(event)
+        ion_concentration=self.set_ion_concentration(event)
+
         #Prepare for ion addition
         preprocess_command="-c "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"ions.tpr"
         ionize_command="genion -s "+dir+"/"+"ions.tpr -o "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -pname "+\
-            pos_ion+" -nname "+neg_ion+" -neutral -conc 0.15"
+            pos_ion+" -nname "+neg_ion+" -neutral"
+
+        if(ion_concentration !=(-1)):
+            ionize_command=ionize_command+" -conc 0.15"    
+
         error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
         if(version<5.0):
             status=os.system("grompp -f ./scripts/gromacs_less_than_5/ions.mdp "+preprocess_command)
@@ -355,6 +372,7 @@ class MyMainWindow(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You entered: %s\n' % dlg.GetValue())
         dlg.Destroy()
+
 
     def OnMinimize(self, event):
         pre_min_command=" -c "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"em.tpr"
