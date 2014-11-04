@@ -333,7 +333,7 @@ class MyMainWindow(wx.Frame):
         lst = ["Na", "K", "Ca", "Mg"]
 #        dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
         panel = wx.Panel(self, -1)
-        rb1 = wx.RadioButton(panel, label='Value A', pos=(10, 10), style=wx.RB_GROUP)
+        self.rb1 = wx.RadioButton(panel, label='Value A', pos=(10, 10), style=wx.RB_GROUP)
 #        dlg=wx.RadioBox(panel, -1, "A Radio Box", (20, 20), wx.DefaultSize, lst, 2, wx.RA_SPECIFY_COLS)
 #        if dlg.GetStringSelection() != "":
 #            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
@@ -362,7 +362,8 @@ class MyMainWindow(wx.Frame):
 
 
     def ionize(self, event):
-        pos_ion=self.pos_iontypechoice(event)
+#        pos_ion=self.pos_iontypechoice(event)
+        pos_ion=self.pos_iontypechoice_new(event)
         neg_ion=self.neg_iontypechoice(event)
         ion_concentration=self.set_ion_concentration(event)
 

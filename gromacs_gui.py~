@@ -295,7 +295,7 @@ class MyMainWindow(wx.Frame):
         boxtype=self.boxtypechoice(event)
         buffer=self.set_buffer_distance(event)
         error_message="ERROR: Hey dude! Something went wrong in solvation precedure! Check log files!"
-        presolvate_command="editconf -f "+dir+"/"+"processed.pdb -o "+dir+"/"+"newbox.pdb -bt "+boxtype+" -c -d 1.0"
+        presolvate_command="editconf -f "+dir+"/"+"processed.pdb -o "+dir+"/"+"newbox.pdb -bt "+boxtype+" -c -d "+buffer
         if(boxtype != ""):
             if(version<5.0):
                 status=os.system(presolvate_command)
