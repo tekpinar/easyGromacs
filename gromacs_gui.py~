@@ -42,9 +42,9 @@ class MyMainWindow(wx.Frame):
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(7, wx.Image('./images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Prepare Model', '')
         toolbar.AddSimpleTool(9, wx.Image('./images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Solvate', '')
-        toolbar.AddSimpleTool(10, wx.Image('./images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Ionize', '')
+        toolbar.AddSimpleTool(10, wx.Image('./images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(65, 40).ConvertToBitmap(), 'Ionize', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(11, wx.Image('./images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Minimize', '')
+        toolbar.AddSimpleTool(11, wx.Image('./images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Minimize', '')
         toolbar.AddSimpleTool(12, wx.Image('./images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
         toolbar.AddSimpleTool(13, wx.Image('./images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
         toolbar.AddSimpleTool(14, wx.Image('./images/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Production Run', '')
@@ -71,7 +71,7 @@ class MyMainWindow(wx.Frame):
         #Toolbar events
         self.Bind(wx.EVT_TOOL, self.OnNew, id=1)
         self.Bind(wx.EVT_TOOL, self.openfile, id=2)
-        self.Bind(wx.EVT_TOOL, self.OnSave, id=3)
+#        self.Bind(wx.EVT_TOOL, self.OnSave, id=3)
         self.Bind(wx.EVT_TOOL, self.OnExit, id=4)
         self.Bind(wx.EVT_TOOL, self.OnPrepare, id=7)
         self.Bind(wx.EVT_TOOL, self.solvate, id=9)
@@ -135,8 +135,8 @@ class MyMainWindow(wx.Frame):
     def OnNew(self, event):
         self.statusbar.SetStatusText('New Command')
 
-    def OnSave(self, event):
-        self.statusbar.SetStatusText('Save Command')
+#    def OnSave(self, event):
+#        self.statusbar.SetStatusText('Save Command')
     
     def changePlot(self, event):
         if self.current_draw == 'sin' :
@@ -401,11 +401,71 @@ class MyMainWindow(wx.Frame):
                     else:
                         print (error_message)
 
-    def tempentry(self, event):
-        dlg = wx.TextEntryDialog(self, 'Enter temperature in Kelvin','Text Entry')
+    def set_temperature(self, event):
+        dlg = wx.TextEntryDialog(self, 'Enter temperature in Kelvin','')
         dlg.SetValue("300")
+        filename=""
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You entered: %s\n' % dlg.GetValue())
+            if(version<5.0):
+                file_name="./scripts/gromacs_less_than_5/nvt.mdp"
+            elif(version>=5.0):
+                file_name="./scripts/gromacs_5_or_more/nvt.mdp"
+
+            file=open(filename, "r")
+            lines=file.readlines()
+            file.close()
+            file=open(filename, "w")
+            for line in lines:
+                if( (line.find("ref_t") ) !=(-1)):
+                    line="ref_t\t\t= "+dlg.GetValue()+"\t"+dlg.GetValue()+" \t; reference temperature, one for each group, in K\n"
+                if( (line.find("gen_temp") ) !=(-1)):
+                    line="gen_temp\t= "+dlg.GetValue()+"\t\t; temperature for Maxwell distribution\n"
+                file.write(line)            
+            file.close()
+            if(version<5.0):
+                file_name="./scripts/gromacs_less_than_5/nvt.mdp"
+            elif(version>=5.0):
+                file_name="./scripts/gromacs_5_or_more/nvt.mdp"
+
+#Now, lets set npt.mdp script also to the same temperature. 
+######################################################################################################################################
+            if(version<5.0):
+                file_name="./scripts/gromacs_less_than_5/npt.mdp"
+            elif(version>=5.0):
+                file_name="./scripts/gromacs_5_or_more/npt.mdp"
+
+            file=open(filename, "r")
+            lines=file.readlines()
+            file.close()
+            file=open(filename, "w")
+            for line in lines:
+                if( (line.find("ref_t") ) !=(-1)):
+                    line="ref_t\t\t= "+dlg.GetValue()+"\t"+dlg.GetValue()+" \t; reference temperature, one for each group, in K\n"
+                file.write(line)            
+            file.close()
+######################################################################################################################################
+
+#Finally, lets set md.mdp script also to the same temperature. 
+######################################################################################################################################
+            if(version<5.0):
+                file_name="./scripts/gromacs_less_than_5/md.mdp"
+            elif(version>=5.0):
+                file_name="./scripts/gromacs_5_or_more/md.mdp"
+
+            file=open(filename, "r")
+            lines=file.readlines()
+            file.close()
+            file=open(filename, "w")
+            for line in lines:
+                if( (line.find("ref_t") ) !=(-1)):
+                    line="ref_t\t\t= "+dlg.GetValue()+"\t"+dlg.GetValue()+" \t; reference temperature, one for each group, in K\n"
+                file.write(line)            
+            file.close()
+######################################################################################################################################
+            return dlg.GetValue()
+        else:
+            return (-1)
         dlg.Destroy()
 
     def OnMinimize(self, event):
@@ -427,6 +487,7 @@ class MyMainWindow(wx.Frame):
             print "ERROR: Hey dude! I think something is really wrong here in minimization!"                
 
     def OnEquilibratePhase1(self, event):
+        self.set_temperature(event)
         pre_phase1_command=" -c "+dir+"/"+"em.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"nvt.tpr"
         if(version<5.0):
             pre_phase1_command="grompp -f ./scripts/gromacs_less_than_5/nvt.mdp"+pre_phase1_command
@@ -489,7 +550,7 @@ class p1(wx.Panel):
 
 class MyApp(wx.App):
     def OnInit(self):
-        frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs Tutorial')
+        frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs')
         frame.Show(True)
         return True
 
