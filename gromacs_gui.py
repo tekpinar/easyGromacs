@@ -40,14 +40,14 @@ class MyMainWindow(wx.Frame):
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
         toolbar.AddSimpleTool(2, wx.Image('./images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(7, wx.Image('./images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(75, 40).ConvertToBitmap(), 'Prepare Model', '')
-        toolbar.AddSimpleTool(9, wx.Image('./images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(75, 40).ConvertToBitmap(), 'Solvate', '')
-        toolbar.AddSimpleTool(10, wx.Image('./images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(75, 40).ConvertToBitmap(), 'Ionize', '')
+        toolbar.AddSimpleTool(7, wx.Image('./images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Prepare Model', '')
+        toolbar.AddSimpleTool(9, wx.Image('./images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Solvate', '')
+        toolbar.AddSimpleTool(10, wx.Image('./images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(65, 40).ConvertToBitmap(), 'Ionize', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(11, wx.Image('./images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Minimize', '')
-        toolbar.AddSimpleTool(12, wx.Image('./images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
-        toolbar.AddSimpleTool(13, wx.Image('./images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
-        toolbar.AddSimpleTool(14, wx.Image('./images/run.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Production Run', '')
+        toolbar.AddSimpleTool(11, wx.Image('./images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Minimize', '')
+        toolbar.AddSimpleTool(12, wx.Image('./images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
+        toolbar.AddSimpleTool(13, wx.Image('./images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
+        toolbar.AddSimpleTool(14, wx.Image('./images/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Production Run', '')
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(4, wx.Image('./images/stock_exit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
         toolbar.Realize()
@@ -326,14 +326,18 @@ class MyMainWindow(wx.Frame):
 #        dlg=wx.RadioBox(panel, -1, "A Radio Box", (10, 10), wx.DefaultSize, lst, 2, wx.RA_SPECIFY_COLS)
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
+            return dlg.GetStringSelection().upper()
+        else:
+            self.SetStatusText('No positive ion is selected!\n')
+            return ""
+
         dlg.Destroy()
-        return dlg.GetStringSelection().upper()
 
     def pos_iontypechoice_new(self, event):
         lst = ["Na", "K", "Ca", "Mg"]
 #        dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
-        panel = wx.Panel(self, -1)
-        self.rb1 = wx.RadioButton(panel, label='Value A', pos=(10, 10), style=wx.RB_GROUP)
+        panel = wx.Panel(self, wx.Frame)
+        self.rb1 = wx.RadioButton(panel, id=wx.ID_ANY, label='Value A', pos=(10, 10), style=wx.RB_GROUP)
 #        dlg=wx.RadioBox(panel, -1, "A Radio Box", (20, 20), wx.DefaultSize, lst, 2, wx.RA_SPECIFY_COLS)
 #        if dlg.GetStringSelection() != "":
 #            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
@@ -346,8 +350,11 @@ class MyMainWindow(wx.Frame):
         dlg = wx.SingleChoiceDialog(self, 'Select negative ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
+            return dlg.GetStringSelection().upper()
+        else:
+            self.SetStatusText('No negative ion is selected!\n')
+            return ""
         dlg.Destroy()
-        return dlg.GetStringSelection().upper()
 
     def set_ion_concentration(self, event):
         dlg = wx.TextEntryDialog(self, 'Ion concentration (M/L):','Would you like to set ion concentration?')
@@ -357,40 +364,42 @@ class MyMainWindow(wx.Frame):
             return dlg.GetValue()
         else:
             return (-1)
-        
         dlg.Destroy()
 
 
     def ionize(self, event):
-#        pos_ion=self.pos_iontypechoice(event)
-        pos_ion=self.pos_iontypechoice_new(event)
-        neg_ion=self.neg_iontypechoice(event)
+#        posIon=self.pos_iontypechoice_new(event)
         ion_concentration=self.set_ion_concentration(event)
+        posIon=""
+        negIon=""
+        posIon=self.pos_iontypechoice(event)
+        if(posIon!=""):
+            negIon=self.neg_iontypechoice(event)
 
-        #Prepare for ion addition
-        preprocess_command="-c "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"ions.tpr"
-        ionize_command="genion -s "+dir+"/"+"ions.tpr -o "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -pname "+\
-            pos_ion+" -nname "+neg_ion+" -neutral"
+        if( (posIon!="") and (negIon!="")):
+            #Prepare for ion addition
+            preprocess_command="-c "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"ions.tpr"
+            ionize_command="genion -s "+dir+"/"+"ions.tpr -o "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -pname "+posIon+" -nname "+negIon+" -neutral"
+            
+            if(ion_concentration !=(-1)):
+                ionize_command=ionize_command+" -conc 0.15"    
 
-        if(ion_concentration !=(-1)):
-            ionize_command=ionize_command+" -conc 0.15"    
-
-        error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
-        if(version<5.0):
-            status=os.system("grompp -f ./scripts/gromacs_less_than_5/ions.mdp "+preprocess_command)
-            if(status==0):
+                error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
+                if(version<5.0):
+                    status=os.system("grompp -f ./scripts/gromacs_less_than_5/ions.mdp "+preprocess_command)
+                    if(status==0):
                 #Produce and place ions
-                os.system(ionize_command)
-            else:
-                print (error_message)
+                        os.system(ionize_command)
+                    else:
+                        print (error_message)
 
-        elif(version>=5.0):
-            status=os.system("gmx grompp -f ./scripts/gromacs_5_or_more/ions.mdp "+preprocess_command)
-            if(status==0):
+                elif(version>=5.0):
+                    status=os.system("gmx grompp -f ./scripts/gromacs_5_or_more/ions.mdp "+preprocess_command)
+                    if(status==0):
                 #Produce and place ions
-                os.system("gmx "+ionize_command)
-            else:
-                print (error_message)
+                        os.system("gmx "+ionize_command)
+                    else:
+                        print (error_message)
 
     def tempentry(self, event):
         dlg = wx.TextEntryDialog(self, 'Enter temperature in Kelvin','Text Entry')
@@ -398,7 +407,6 @@ class MyMainWindow(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You entered: %s\n' % dlg.GetValue())
         dlg.Destroy()
-
 
     def OnMinimize(self, event):
         pre_min_command=" -c "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"em.tpr"
