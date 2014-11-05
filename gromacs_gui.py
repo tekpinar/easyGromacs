@@ -79,7 +79,7 @@ class MyMainWindow(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnMinimize, id=11)
         self.Bind(wx.EVT_TOOL, self.OnEquilibratePhase1, id=12)
         self.Bind(wx.EVT_TOOL, self.OnEquilibratePhase2, id=13)
-#        self.Bind(wx.EVT_TOOL, self.tempentry, id=12)
+        self.Bind(wx.EVT_TOOL, self.OnProduction, id=14)
 
         #Menubar
         menubar = wx.MenuBar()
@@ -468,6 +468,86 @@ class MyMainWindow(wx.Frame):
             return (-1)
         dlg.Destroy()
 
+    def set_pressure(self, event):
+        dlg = wx.TextEntryDialog(self, 'Unit: Bar', 'Enter Pressure')
+        dlg.SetValue("1.0")
+        filename=""
+        if dlg.ShowModal() == wx.ID_OK:
+            self.SetStatusText('You entered: %s\n' % dlg.GetValue())
+            if(version<5.0):
+                filename="./scripts/gromacs_less_than_5/npt.mdp"
+            elif(version>=5.0):
+                filename="./scripts/gromacs_5_or_more/npt.mdp"
+
+            file=open(filename, "r")
+            lines=file.readlines()
+            file.close()
+            file=open(filename, "w")
+            for line in lines:
+                if( (line.find("ref_p") ) !=(-1)):
+                    line="ref_p\t\t\t= "+dlg.GetValue()+"\t\t\t; reference pressure, in bar\n"
+                file.write(line)            
+            file.close()
+#Finally, lets set md.mdp script also to the same pressure.
+######################################################################################################################################
+            if(version<5.0):
+                filename="./scripts/gromacs_less_than_5/md.mdp"
+            elif(version>=5.0):
+                filename="./scripts/gromacs_5_or_more/md.mdp"
+
+            file=open(filename, "r")
+            lines=file.readlines()
+            file.close()
+            file=open(filename, "w")
+
+            for line in lines:
+                if( (line.find("ref_p") ) !=(-1)):
+                    line="ref_p\t\t\t= "+dlg.GetValue()+"\t\t\t; reference pressure, in bar\n"
+
+                file.write(line)            
+            file.close()
+######################################################################################################################################
+
+            return dlg.GetValue()
+        else:
+            return (-1)
+        dlg.Destroy()
+
+    def set_simulation_time(self, event):
+        dlg = wx.TextEntryDialog(self, 'Unit: nanosecond','Simulation Time')
+        dlg.SetValue("1.0")
+        filename=""
+        if dlg.ShowModal() == wx.ID_OK:
+            self.SetStatusText('You entered: %s\n' % dlg.GetValue())
+            #Finally, lets set total simulation time in md.mdp.
+            if(version<5.0):
+                filename="./scripts/gromacs_less_than_5/md.mdp"
+            elif(version>=5.0):
+                filename="./scripts/gromacs_5_or_more/md.mdp"
+
+            file=open(filename, "r")
+            lines=file.readlines()
+            #Get time step now
+            time_step=""
+            for line in lines:
+                if( (line.find("dt") ) !=(-1)):
+                    time_step=line.partition('=')[-1].rpartition(';')[0]
+                    print "This is time step"+time_step
+            file.close()
+        
+            number_of_steps=1000*int(float(dlg.GetValue())/float(time_step))
+            file=open(filename, "w")
+
+            for line in lines:
+                if( (line.find("nsteps") ) !=(-1)):
+                    line="nsteps          = "+str(number_of_steps)+"\t\t; 2 * "+str(number_of_steps)+" =  ("+dlg.GetValue()+" ns)\n"
+                file.write(line)            
+            file.close()
+            return dlg.GetValue()
+        else:
+            return (-1)
+        dlg.Destroy()
+
     def OnMinimize(self, event):
         pre_min_command=" -c "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"em.tpr"
         if(version<5.0):
@@ -505,6 +585,7 @@ class MyMainWindow(wx.Frame):
             print "ERROR: Hey dude! I think something went wrong in NVT simulation!"
 
     def OnEquilibratePhase2(self, event):
+        self.set_pressure(event)
         pre_phase2_command=" -c "+dir+"/"+"nvt.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"npt.tpr"
         if(version<5.0):
             pre_phase2_command="grompp -f ./scripts/gromacs_less_than_5/npt.mdp"+pre_phase2_command
@@ -522,11 +603,12 @@ class MyMainWindow(wx.Frame):
             print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
 
     def OnProduction(self, event):
-        pre_production_command="grompp -f md.mdp -c "+dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
+        self.set_simulation_time(event)
+        pre_production_command = dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
         if(version<5.0):
-            pre_production_command=pre_production_command
+            pre_production_command="grompp -f ./scripts/gromacs_less_than_5/md.mdp -c "+pre_production_command
         elif(version>=5.0):
-            pre_production_command="gmx "+pre_production_command
+            pre_production_command="gmx grompp -f ./scripts/gromacs_5_or_more/md.mdp -c "+pre_production_command
 
         status1=os.system(pre_production_command)
         if(status1 != 0):
