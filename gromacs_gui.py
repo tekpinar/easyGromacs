@@ -56,21 +56,21 @@ class SolvationDialog(wx.Dialog):
         box_lst = ["Cubic", "Triclinic", "Dodecahedron"]
         self.rbox=wx.RadioBox(self, wx.ID_ANY, "Select box type", (20, 60), wx.DefaultSize, box_lst, 1, wx.RA_SPECIFY_COLS)
 
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
         buffer_text=wx.StaticText(self, label='Set buffer distance: ')
 
         self.buffer_distance = wx.TextCtrl(self)
         self.buffer_distance.SetValue("1.0")
         unit_text=wx.StaticText(self, label='nm')
-        hbox2.Add(buffer_text, 0, wx.ALL, 5)
-        hbox2.Add(self.buffer_distance, 0, wx.ALL, 5)
-        hbox2.Add(unit_text, 0, wx.ALL, 5)
+        hbox.Add(buffer_text, 0, wx.ALL, 5)
+        hbox.Add(self.buffer_distance, 0, wx.ALL, 5)
+        hbox.Add(unit_text, 0, wx.ALL, 5)
 
         self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.rbox, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
-        vbox.Add(hbox2, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(hbox, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
         vbox.Add(self.btns, 0, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(vbox)
@@ -319,10 +319,9 @@ class MyMainWindow(wx.Frame):
 #        print dir
         global solvent_model 
         if(initial_pdb != ""):
-            solvent_model=self.waterchoice(event)
-            if(solvent_model!=""):
-                force_field=self.ffchoice(event)
-
+            force_field=self.ffchoice(event)
+            if(force_field !=""):
+                solvent_model=self.waterchoice(event)
                 #This / makes it very unix dependent!!!
 #                os.system("cd "+dir)
                 prepare_command="pdb2gmx -f "+initial_pdb+" -o "+dir+"/"+"processed.pdb -i "+dir+"/"+"posre.itp -p "+dir+"/"+"topol.top -water "\
@@ -332,36 +331,17 @@ class MyMainWindow(wx.Frame):
                 elif(version>=5):
                     os.system("gmx "+prepare_command)
 
-    def boxtypechoice(self, event):
-        bt = ['Cubic', 'Triclinic', 'Dodecahedron']
-        dlg = wx.SingleChoiceDialog(self, 'Select box type', 'Which one?', bt, wx.CHOICEDLG_STYLE)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
-        dlg.Destroy()
-        return dlg.GetStringSelection().lower()
-
-    def set_buffer_distance(self, event):
-        dlg = wx.TextEntryDialog(self, 'Unit (nm)','Buffer distance')
-        dlg.SetValue("1.0")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.SetStatusText('You entered: %s\n' % dlg.GetValue())
-            return dlg.GetValue()
-        else:
-            return (-1)
-        
-        dlg.Destroy()
-
     def solvate(self, event):
-#############################
+#####################
         boxtype=""
         buffer=""
         dlg = SolvationDialog()
         if (dlg.ShowModal()==wx.ID_OK):
-            boxtype=dlg.rbox.GetStringSelection().upper()
+            boxtype=dlg.rbox.GetStringSelection().lower()
             buffer=dlg.buffer_distance.GetValue()
-            self.SetStatusText('You selected %s and %s buffer distance. \n' % (boxtype, buffer))
+            self.SetStatusText('You selected %s box and %s buffer distance. \n' % (boxtype, buffer))
         dlg.Destroy()
-#############################
+#####################
 
         #Define box properties
         #boxtype=self.boxtypechoice(event)
