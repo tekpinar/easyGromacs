@@ -1,7 +1,7 @@
 ; title		= Amber99 ADK MD simulation 
 ; Run parameters
 integrator	= md		; leap-frog integrator
-nsteps		= 100000000	; 2 * 100000000 = 200000 ps (200 ns)
+nsteps          = 500000		; 2 * 500000 =  (1.0 ns)
 dt		    = 0.002		; 2 fs
 ; Output control
 nstxout		        = 40000		; save coordinates every 40.0 ps

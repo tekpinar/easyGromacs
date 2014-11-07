@@ -14,6 +14,67 @@ dir=""
 version=5.02
 #version=4.5
 
+class IonizationDialog(wx.Dialog):
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        wx.Dialog.__init__(self, None, title="Ionization Setup")
+        pos_lst = ["Na", "K", "Ca", "Mg"]
+        self.rbox1=wx.RadioBox(self, wx.ID_ANY, "Select positive ion", (20, 60), wx.DefaultSize, pos_lst, 2, wx.RA_SPECIFY_COLS)
+        neg_lst = ["Cl"]
+        self.rbox2=wx.RadioBox(self, wx.ID_ANY, "Select negative ion", (200, 60), wx.DefaultSize, neg_lst, 2, wx.RA_SPECIFY_COLS)
+
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1.Add(self.rbox1)
+        hbox1.Add(self.rbox2)
+
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.chk = wx.CheckBox(self, label="Set concentration to ")
+        self.chk.SetValue(True)
+
+        hbox2.Add(self.chk, 0, wx.ALL, 5)
+
+        self.concentration = wx.TextCtrl(self)
+        self.concentration.SetValue("0.15")
+        unit_text=wx.StaticText(self, label='M/L')
+        hbox2.Add(self.concentration, 0, wx.ALL, 5)
+        hbox2.Add(unit_text, 0, wx.ALL, 5)
+
+        self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(hbox1, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(hbox2, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(self.btns, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.SetSizer(vbox)
+
+class SolvationDialog(wx.Dialog):
+    def __init__(self):
+        """Constructor"""
+        wx.Dialog.__init__(self, None, title="Solvation Setup")
+        box_lst = ["Cubic", "Triclinic", "Dodecahedron"]
+        self.rbox=wx.RadioBox(self, wx.ID_ANY, "Select box type", (20, 60), wx.DefaultSize, box_lst, 2, wx.RA_SPECIFY_COLS)
+
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        buffer_text=wx.StaticText(self, label='Set buffer distance: ')
+
+        self.buffer_distance = wx.TextCtrl(self)
+        self.buffer_distance.SetValue("1.0")
+        unit_text=wx.StaticText(self, label='nm')
+        hbox2.Add(buffer_text, 0, wx.ALL, 5)
+        hbox2.Add(self.buffer_distance, 0, wx.ALL, 5)
+        hbox2.Add(unit_text, 0, wx.ALL, 5)
+
+        self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.rbox, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(hbox2, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(self.btns, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.SetSizer(vbox)
+
 class MyMainWindow(wx.Frame):
     def __init__(self, parent, id, title):
         wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(800, 600))
@@ -106,7 +167,7 @@ class MyMainWindow(wx.Frame):
     def OnAboutDlg(self, event):
         info = wx.AboutDialogInfo()
         info.Name = "Quick and Dirty Gromacs Tutorial"
-        info.Version = "0.0.1 Beta"
+        info.Version = "0.0.3 Beta"
         info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
         wx.AboutBox(info)
 
@@ -291,9 +352,20 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
 
     def solvate(self, event):
+#############################
+        boxtype=""
+        buffer=""
+        dlg = SolvationDialog()
+        if (dlg.ShowModal()==wx.ID_OK):
+            boxtype=dlg.rbox.GetStringSelection().upper()
+            buffer=dlg.buffer_distance.GetValue()
+            self.SetStatusText('You selected %s and %s buffer distance. \n' % (boxtype, buffer))
+        dlg.Destroy()
+#############################
+
         #Define box properties
-        boxtype=self.boxtypechoice(event)
-        buffer=self.set_buffer_distance(event)
+        #boxtype=self.boxtypechoice(event)
+        #buffer=self.set_buffer_distance(event)
         error_message="ERROR: Hey dude! Something went wrong in solvation precedure! Check log files!"
         presolvate_command="editconf -f "+dir+"/"+"processed.pdb -o "+dir+"/"+"newbox.pdb -bt "+boxtype+" -c -d "+buffer
         if(boxtype != ""):
@@ -320,68 +392,23 @@ class MyMainWindow(wx.Frame):
                 else:
                     print (error_message)
 
-    def pos_iontypechoice(self, event):
-        lst = ["Na", "K", "Ca", "Mg"]
-        dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
-#        dlg=wx.RadioBox(panel, -1, "A Radio Box", (10, 10), wx.DefaultSize, lst, 2, wx.RA_SPECIFY_COLS)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
-            return dlg.GetStringSelection().upper()
-        else:
-            self.SetStatusText('No positive ion is selected!\n')
-            return ""
-
-        dlg.Destroy()
-
-    def pos_iontypechoice_new(self, event):
-        lst = ["Na", "K", "Ca", "Mg"]
-#        dlg = wx.SingleChoiceDialog(self, 'Select positive ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
-        panel = wx.Panel(self, wx.Frame)
-        self.rb1 = wx.RadioButton(panel, id=wx.ID_ANY, label='Value A', pos=(10, 10), style=wx.RB_GROUP)
-#        dlg=wx.RadioBox(panel, -1, "A Radio Box", (20, 20), wx.DefaultSize, lst, 2, wx.RA_SPECIFY_COLS)
-#        if dlg.GetStringSelection() != "":
-#            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
-
-#        return dlg.GetStringSelection().upper()
-#        dlg.Destroy()
-
-    def neg_iontypechoice(self, event):
-        lst = ["Cl"]
-        dlg = wx.SingleChoiceDialog(self, 'Select negative ion type', 'Which one?',lst, wx.CHOICEDLG_STYLE)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.SetStatusText('You\'ve chosen %s\n' % dlg.GetStringSelection())
-            return dlg.GetStringSelection().upper()
-        else:
-            self.SetStatusText('No negative ion is selected!\n')
-            return ""
-        dlg.Destroy()
-
-    def set_ion_concentration(self, event):
-        dlg = wx.TextEntryDialog(self, 'Ion concentration (M/L):','Would you like to set ion concentration?')
-        dlg.SetValue("0.15")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.SetStatusText('You entered: %s\n' % dlg.GetValue())
-            return dlg.GetValue()
-        else:
-            return (-1)
-        dlg.Destroy()
-
-
     def ionize(self, event):
-#        posIon=self.pos_iontypechoice_new(event)
-        ion_concentration=self.set_ion_concentration(event)
         posIon=""
         negIon=""
-        posIon=self.pos_iontypechoice(event)
-        if(posIon!=""):
-            negIon=self.neg_iontypechoice(event)
-
-        if( (posIon!="") and (negIon!="")):
+        ion_concentration=""
+        dlg = IonizationDialog()
+        if (dlg.ShowModal()==wx.ID_OK):
+            posIon=dlg.rbox1.GetStringSelection().upper()
+            negIon=dlg.rbox2.GetStringSelection().upper()
+            if(dlg.chk.GetValue()):
+                ion_concentration=dlg.concentration.GetValue()
+            self.SetStatusText('You selected %s and %s ions. \n' % (posIon, negIon))
+        
             #Prepare for ion addition
             preprocess_command="-c "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"ions.tpr"
             ionize_command="genion -s "+dir+"/"+"ions.tpr -o "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -pname "+posIon+" -nname "+negIon+" -neutral"
             
-            if(ion_concentration !=(-1)):
+            if(ion_concentration !=""):
                 ionize_command=ionize_command+" -conc 0.15"    
 
                 error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
@@ -400,7 +427,7 @@ class MyMainWindow(wx.Frame):
                         os.system("gmx "+ionize_command)
                     else:
                         print (error_message)
-
+        dlg.Destroy()
     def set_temperature(self, event):
         dlg = wx.TextEntryDialog(self, 'Enter temperature in Kelvin','')
         dlg.SetValue("300")
@@ -468,7 +495,23 @@ class MyMainWindow(wx.Frame):
             return (-1)
         dlg.Destroy()
 
+    def set_pressure_new(self, event):
+        panel = wx.Panel(self, wx.Frame, -1)
+        myList =['','a','b']
+        rb=wx.RadioBox(self.panel, "Options :", (0, 0), wx.DefaultSize, myList, 2, wx.RA_SPECIFY_COLS)
+        rb.ShowItem(0, show=False)
+#        dlg = wx.NumberEntryDialog( self, "Unit: Bar", "(0-200 frames)", "Tail Length", value=2.0, min=1.0, max=100.0 )
+#        if dlg.ShowModal() == wx.ID_OK:
+#            params.tail_length = dlg.GetValue()
+#        dlg.Destroy()
+
+
     def set_pressure(self, event):
+#        dlg = wx.NumberEntryDialog( self, "Unit: Bar", "(0-200 frames)", "Tail Length", value=params.tail_length, min=1.0, max=100.0 )
+#        if dlg.ShowModal() == wx.ID_OK:
+#            params.tail_length = dlg.GetValue()
+#        dlg.Destroy()
+
         dlg = wx.TextEntryDialog(self, 'Unit: Bar', 'Enter Pressure')
         dlg.SetValue("1.0")
         filename=""
@@ -523,8 +566,7 @@ class MyMainWindow(wx.Frame):
             if(version<5.0):
                 filename="./scripts/gromacs_less_than_5/md.mdp"
             elif(version>=5.0):
-#                filename="./scripts/gromacs_5_or_more/md.mdp"
-                filename="./scripts/md.mdp"
+                filename="./scripts/gromacs_5_or_more/md.mdp"
 
             file=open(filename, "r")
             lines=file.readlines()
@@ -602,17 +644,24 @@ class MyMainWindow(wx.Frame):
                 self.SetStatusText('Completed NVT equilibration succesfully!\n')
         else:
             print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
-
+        
+    def production_warning(self, event):
+        dlg = wx.MessageDialog(None, "Congratulations! \nYou produced a md.tpr file. \nWe suggest you to perform\n production run on a cluster!",'Warning',wx.OK | wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
+    
     def OnProduction(self, event):
         self.set_simulation_time(event)
-        pre_production_command="grompp -f md.mdp -c "+dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
+        pre_production_command = dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
         if(version<5.0):
-            pre_production_command=pre_production_command
+            pre_production_command="grompp -f ./scripts/gromacs_less_than_5/md.mdp -c "+pre_production_command
         elif(version>=5.0):
-            pre_production_command="gmx "+pre_production_command
+            pre_production_command="gmx grompp -f ./scripts/gromacs_5_or_more/md.mdp -c "+pre_production_command
 
         status1=os.system(pre_production_command)
-        if(status1 != 0):
+        if(status==0):
+            self.production_warning(event)
+        else:
             print "ERROR: Hey dude! I think something went wrong in Pre Production run!"
     
     def OnQuit(self, e):
@@ -636,6 +685,8 @@ class MyApp(wx.App):
         frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs')
         frame.Show(True)
         return True
+
+
 
 app = MyApp(0)
 app.MainLoop()
