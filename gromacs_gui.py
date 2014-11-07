@@ -19,6 +19,7 @@ class IonizationDialog(wx.Dialog):
     def __init__(self):
         """Constructor"""
         wx.Dialog.__init__(self, None, title="Ionization Setup")
+        self.SetSize((350, 225))
         pos_lst = ["Na", "K", "Ca", "Mg"]
         self.rbox1=wx.RadioBox(self, wx.ID_ANY, "Select positive ion", (20, 60), wx.DefaultSize, pos_lst, 2, wx.RA_SPECIFY_COLS)
         neg_lst = ["Cl"]
@@ -45,7 +46,8 @@ class IonizationDialog(wx.Dialog):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(hbox1, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
         vbox.Add(hbox2, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
-        vbox.Add(self.btns, 0, wx.ALL | wx.EXPAND, 5)
+#        vbox.Add(self.btns, 0, wx.ALL | wx.EXPAND, 5)
+        vbox.Add(self.btns, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
 
         self.SetSizer(vbox)
 
@@ -53,8 +55,9 @@ class SolvationDialog(wx.Dialog):
     def __init__(self):
         """Constructor"""
         wx.Dialog.__init__(self, None, title="Solvation Setup")
-        box_lst = ["Cubic", "Triclinic", "Dodecahedron"]
-        self.rbox=wx.RadioBox(self, wx.ID_ANY, "Select box type", (20, 60), wx.DefaultSize, box_lst, 1, wx.RA_SPECIFY_COLS)
+        self.SetSize((405, 200))
+        box_lst = ["Triclinic", "Dodecahedron", "Cubic"]
+        self.rbox=wx.RadioBox(self, wx.ID_ANY, "Select box type", (0, 60), wx.DefaultSize, box_lst, 1, wx.RA_SPECIFY_ROWS)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         buffer_text=wx.StaticText(self, label='Set buffer distance: ')
@@ -70,10 +73,36 @@ class SolvationDialog(wx.Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.rbox, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
-        vbox.Add(hbox, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=10)
         vbox.Add(self.btns, 0, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(vbox)
+
+class PreparationDialog(wx.Dialog):
+    def __init__(self):
+        """Constructor"""
+        wx.Dialog.__init__(self, None, title="Preparation Setup")
+        self.SetSize((270, 250))
+        box_lst = ["TIP3P", "SPC", "TIP4P", "SPCE"]
+        self.rbox=wx.RadioBox(self, wx.ID_ANY, "Select box type", (0, 60), wx.DefaultSize, box_lst, 2, wx.RA_SPECIFY_ROWS)
+        
+        ffm = ['amber03', 'amber94', 'amber96', 'amber99', 'amber99sb', \
+                   'amber99sb-ildn', 'amberGS', 'charmm27', 'gromos43a1', 'gromos43a2', \
+                   'gromos45a3', 'gromos53a5','gromos53a6', 'gromos54a7', 'oplsaa']
+    
+        self.cb = wx.ComboBox(self, pos=(50, 30), choices=ffm, style=wx.CB_READONLY)
+        self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
+
+        text=wx.StaticText(self, label='Select force field: ')
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.rbox, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(text,      flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(self.cb,   flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(self.btns, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+
+        self.SetSizer(vbox)
+
 
 class MyMainWindow(wx.Frame):
     def __init__(self, parent, id, title):
@@ -307,6 +336,10 @@ class MyMainWindow(wx.Frame):
                    'gromos53a6    -GROMOS96 53a6 force field (JCC 2004 vol 25 pag 1656)',\
                    'gromos54a7    -GROMOS96 54a7 force field (Eur. Biophys. J. (2011), 40,, 843-856, DOI: 10.1007/s00249-011-0700-9)',\
                    'oplsaa        -OPLS-AA/L all-atom force field (2001 aminoacid dihedrals)']
+
+
+
+
         dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', ffm, wx.CHOICEDLG_STYLE)
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You chose: %s\n' % dlg.GetStringSelection())
@@ -314,18 +347,29 @@ class MyMainWindow(wx.Frame):
         return dlg.GetStringSelection()
 
     def OnPrepare(self, event):
-         #This / makes it very unix dependent!!!
-        initial_pdb=dir+"/"+base
-#        print dir
         global solvent_model 
+        force_field=""
+        initial_pdb=dir+"/"+base
+###############################
+        dlg = PreparationDialog()
+        if (dlg.ShowModal()==wx.ID_OK):
+            solvent_model=dlg.rbox.GetStringSelection().lower()
+            force_field=dlg.cb.GetValue()
+            self.SetStatusText('You selected %s force field and %s water model. \n' % (solvent_model, force_field))
+        dlg.Destroy()
+################################
+
+         #This / makes it very unix dependent!!!
+
+#        print dir
         if(initial_pdb != ""):
-            force_field=self.ffchoice(event)
+#            force_field=self.ffchoice(event)
             if(force_field !=""):
-                solvent_model=self.waterchoice(event)
+#                solvent_model=self.waterchoice(event)
                 #This / makes it very unix dependent!!!
 #                os.system("cd "+dir)
                 prepare_command="pdb2gmx -f "+initial_pdb+" -o "+dir+"/"+"processed.pdb -i "+dir+"/"+"posre.itp -p "+dir+"/"+"topol.top -water "\
-                    +solvent_model.lower()+" -ff "+force_field[0:14]
+                    +solvent_model.lower()+" -ff "+force_field
                 if(version<5.0):
                     os.system(prepare_command)
                 elif(version>=5):
