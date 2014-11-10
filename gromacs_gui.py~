@@ -19,7 +19,7 @@ class IonizationDialog(wx.Dialog):
     def __init__(self):
         """Constructor"""
         wx.Dialog.__init__(self, None, title="Ionization Setup")
-        self.SetSize((350, 250))
+        self.SetSize((350, 225))
         pos_lst = ["Na", "K", "Ca", "Mg"]
         self.rbox1=wx.RadioBox(self, wx.ID_ANY, "Select positive ion", (20, 60), wx.DefaultSize, pos_lst, 2, wx.RA_SPECIFY_COLS)
         neg_lst = ["Cl"]
@@ -362,7 +362,12 @@ class MyMainWindow(wx.Frame):
          #This / makes it very unix dependent!!!
 
 #        print dir
-        if(initial_pdb != ""):
+#        if(initial_pdb == ""):
+        if(dir == ""):
+            dial=wx.MessageDialog(None, 'You have not opened a pdb file to start!', 'ERROR', wx.OK | wx.ICON_ERROR)
+            dial.ShowModal()
+            dial.Destroy()
+        else:
 #            force_field=self.ffchoice(event)
             if(force_field !=""):
 #                solvent_model=self.waterchoice(event)
@@ -691,18 +696,18 @@ class MyMainWindow(wx.Frame):
     def OnQuit(self, e):
         self.Close()
 
-class p1(wx.Panel):
-    def __init__(self, parent):
-        wx.Frame.__init__(self, parent, title="title", size=(50, 50))
-
-        #configure graph
-        self.figure = matplotlib.figure.Figure()
-        self.axes   = self.figure.add_subplot(111)
-        t=numpy.arange(0.0, 10, 1.0)
-        s=[0,1,0,1,0,2,1,2,1,0]
-        self.y_max =10
-        self.axes.plot(t,s)
-        self.canvas=FigureCanvas(self, -1, self.figure)
+#class p1(wx.Panel):
+#    def __init__(self, parent):
+#        wx.Frame.__init__(self, parent, title="title", size=(50, 50))#
+#
+#        #configure graph
+#        self.figure = matplotlib.figure.Figure()
+#        self.axes   = self.figure.add_subplot(111)
+#        t=numpy.arange(0.0, 10, 1.0)
+#        s=[0,1,0,1,0,2,1,2,1,0]
+#        self.y_max =10
+#        self.axes.plot(t,s)
+#        self.canvas=FigureCanvas(self, -1, self.figure)
 
 class MyApp(wx.App):
     def OnInit(self):
