@@ -83,8 +83,8 @@ class PreparationDialog(wx.Dialog):
         """Constructor"""
         wx.Dialog.__init__(self, None, title="Preparation Setup")
         self.SetSize((270, 250))
-        box_lst = ["TIP3P", "SPC", "TIP4P", "SPCE"]
-        self.rbox=wx.RadioBox(self, wx.ID_ANY, "Select box type", (0, 60), wx.DefaultSize, box_lst, 2, wx.RA_SPECIFY_ROWS)
+        water_lst = ["TIP3P", "SPC", "TIP4P", "SPCE"]
+        self.rbox=wx.RadioBox(self, wx.ID_ANY, "Select water model", (0, 60), wx.DefaultSize, water_lst, 2, wx.RA_SPECIFY_ROWS)
         
         ffm = ['amber03', 'amber94', 'amber96', 'amber99', 'amber99sb', \
                    'amber99sb-ildn', 'amberGS', 'charmm27', 'gromos43a1', 'gromos43a2', \
@@ -128,18 +128,18 @@ class MyMainWindow(wx.Frame):
 
         #Toolbar items
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(2, wx.Image('./images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
+        toolbar.AddSimpleTool(2, wx.Image('images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(7, wx.Image('./images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Prepare Model', '')
-        toolbar.AddSimpleTool(9, wx.Image('./images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Solvate', '')
-        toolbar.AddSimpleTool(10, wx.Image('./images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(65, 40).ConvertToBitmap(), 'Ionize', '')
+        toolbar.AddSimpleTool(7, wx.Image('images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Prepare Model', '')
+        toolbar.AddSimpleTool(9, wx.Image('images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Solvate', '')
+        toolbar.AddSimpleTool(10, wx.Image('images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(65, 40).ConvertToBitmap(), 'Ionize', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(11, wx.Image('./images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Minimize', '')
-        toolbar.AddSimpleTool(12, wx.Image('./images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
-        toolbar.AddSimpleTool(13, wx.Image('./images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
-        toolbar.AddSimpleTool(14, wx.Image('./images/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Production Run', '')
+        toolbar.AddSimpleTool(11, wx.Image('images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Minimize', '')
+        toolbar.AddSimpleTool(12, wx.Image('images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
+        toolbar.AddSimpleTool(13, wx.Image('images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
+        toolbar.AddSimpleTool(14, wx.Image('images/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Production Run', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(4, wx.Image('./images/stock_exit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
+        toolbar.AddSimpleTool(4, wx.Image('images/stock_exit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
         toolbar.Realize()
 
         self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -164,8 +164,8 @@ class MyMainWindow(wx.Frame):
 #        self.Bind(wx.EVT_TOOL, self.OnSave, id=3)
         self.Bind(wx.EVT_TOOL, self.OnExit, id=4)
         self.Bind(wx.EVT_TOOL, self.OnPrepare, id=7)
-        self.Bind(wx.EVT_TOOL, self.solvate, id=9)
-        self.Bind(wx.EVT_TOOL, self.ionize, id=10)
+        self.Bind(wx.EVT_TOOL, self.OnSolvate, id=9)
+        self.Bind(wx.EVT_TOOL, self.OnIonize, id=10)
         self.Bind(wx.EVT_TOOL, self.OnMinimize, id=11)
         self.Bind(wx.EVT_TOOL, self.OnEquilibratePhase1, id=12)
         self.Bind(wx.EVT_TOOL, self.OnEquilibratePhase2, id=13)
@@ -373,11 +373,34 @@ class MyMainWindow(wx.Frame):
                         os.system(prepare_command)
                     elif(version>=5):
                         os.system("gmx "+prepare_command)
-
-    def solvate(self, event):
+    def OnSolvate(self, event):
 #####################
         boxtype=""
         buffer=""
+
+        global dir
+        if ( dir == ""):
+            warning = wx.MessageDialog(None, "Hey dude! It seems like you've not opened your project folder. \nWould you like to do that?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_YES):
+                dir_dlg = wx.DirDialog(self, "Choose your working directory:")
+                if dir_dlg.ShowModal() == wx.ID_OK:
+                    self.SetStatusText('You\'ve chosen : %s\n' % dir_dlg.GetPath())
+                    dir = dir_dlg.GetPath()
+                    dir_dlg.Destroy()
+                else:
+                    return (-1)
+            else:
+                return (-1)
+            warning.Destroy()           
+
+        if os.path.isfile(dir+"/solvated.pdb"):
+            warning = wx.MessageDialog(None, "It seems like you've already solvated the system!\n Are you sure about solvating the system again?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_NO):
+                return (-1)
+            warning.Destroy()           
+
         dlg = SolvationDialog()
         if (dlg.ShowModal()==wx.ID_OK):
             boxtype=dlg.rbox.GetStringSelection().lower()
@@ -415,10 +438,34 @@ class MyMainWindow(wx.Frame):
                 else:
                     print (error_message)
 
-    def ionize(self, event):
+    def OnIonize(self, event):
         posIon=""
         negIon=""
         ion_concentration=""
+
+        global dir
+        if ( dir == ""):
+            warning = wx.MessageDialog(None, "Hey dude! It seems like you've not opened your project folder. \nWould you like to do that?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_YES):
+                dir_dlg = wx.DirDialog(self, "Choose your working directory:")
+                if dir_dlg.ShowModal() == wx.ID_OK:
+                    self.SetStatusText('You\'ve chosen : %s\n' % dir_dlg.GetPath())
+                    dir = dir_dlg.GetPath()
+                    dir_dlg.Destroy()
+                else:
+                    return (-1)
+            else:
+                return (-1)
+            warning.Destroy()           
+
+
+        if os.path.isfile(dir+"/solv_ions.pdb"):
+            warning = wx.MessageDialog(None, "It seems like you've already ionized the system!\nYou can continue from 'Minimize' or\n reset the system by  redoing 'Solvate'!",'Warning', wx.OK | wx.ICON_INFORMATION)
+            warning.ShowModal()
+            return (-1)
+            warning.Destroy()           
+
         dlg = IonizationDialog()
         if (dlg.ShowModal()==wx.ID_OK):
             posIon=dlg.rbox1.GetStringSelection().upper()
@@ -451,6 +498,7 @@ class MyMainWindow(wx.Frame):
                     else:
                         print (error_message)
         dlg.Destroy()
+
     def set_temperature(self, event):
         dlg = wx.TextEntryDialog(self, 'Enter temperature in Kelvin','')
         dlg.SetValue("300")
@@ -602,6 +650,29 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
 
     def OnMinimize(self, event):
+        global dir
+        if ( dir == ""):
+            warning = wx.MessageDialog(None, "Hey dude! It seems like you've not opened your project folder. \nWould you like to do that?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_YES):
+                dir_dlg = wx.DirDialog(self, "Choose your working directory:")
+                if dir_dlg.ShowModal() == wx.ID_OK:
+                    self.SetStatusText('You\'ve chosen : %s\n' % dir_dlg.GetPath())
+                    dir = dir_dlg.GetPath()
+                    dir_dlg.Destroy()
+                else:
+                    return (-1)
+            else:
+                return (-1)
+            warning.Destroy()           
+
+        if (os.path.isfile(dir+"/em.tpr")) and (os.path.isfile(dir+"/em.log") ) and (os.path.isfile(dir+"/em.gro")):
+            warning = wx.MessageDialog(None, "It seems like you've already minimized the system!\n Are you sure about minimizing the system again?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_NO):
+                return (-1)
+            warning.Destroy()           
+
         pre_min_command=" -c "+dir+"/"+"solv_ions.pdb -p "+dir+"/"+"topol.top -o "+dir+"/"+"em.tpr"
         if(version<5.0):
             pre_min_command="grompp -f ./scripts/gromacs_less_than_5/minim.mdp"+pre_min_command
@@ -620,6 +691,29 @@ class MyMainWindow(wx.Frame):
             print "ERROR: Hey dude! I think something is really wrong here in minimization!"                
 
     def OnEquilibratePhase1(self, event):
+        global dir
+        if ( dir == ""):
+            warning = wx.MessageDialog(None, "Hey dude! It seems like you've not opened your project folder. \nWould you like to do that?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_YES):
+                dir_dlg = wx.DirDialog(self, "Choose your working directory:")
+                if dir_dlg.ShowModal() == wx.ID_OK:
+                    self.SetStatusText('You\'ve chosen : %s\n' % dir_dlg.GetPath())
+                    dir = dir_dlg.GetPath()
+                    dir_dlg.Destroy()
+                else:
+                    return (-1)
+            else:
+                return (-1)
+            warning.Destroy()           
+
+        if (os.path.isfile(dir+"/nvt.tpr")) and (os.path.isfile(dir+"/nvt.log") ) and (os.path.isfile(dir+"/nvt.gro")):
+            warning = wx.MessageDialog(None, "It seems like you've already performed NVT equilibration!\n Are you sure about doing it again?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_NO):
+                return (-1)
+            warning.Destroy()           
+
         status=self.set_temperature(event)
         if(status!=(-1)):
             pre_phase1_command=" -c "+dir+"/"+"em.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"nvt.tpr"
@@ -639,6 +733,29 @@ class MyMainWindow(wx.Frame):
                     print "ERROR: Hey dude! I think something went wrong in NVT simulation!"
 
     def OnEquilibratePhase2(self, event):
+        global dir
+        if ( dir == ""):
+            warning = wx.MessageDialog(None, "Hey dude! It seems like you've not opened your project folder. \nWould you like to do that?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_YES):
+                dir_dlg = wx.DirDialog(self, "Choose your working directory:")
+                if dir_dlg.ShowModal() == wx.ID_OK:
+                    self.SetStatusText('You\'ve chosen : %s\n' % dir_dlg.GetPath())
+                    dir = dir_dlg.GetPath()
+                    dir_dlg.Destroy()
+                else:
+                    return (-1)
+            else:
+                return (-1)
+            warning.Destroy()           
+
+        if (os.path.isfile(dir+"/npt.tpr")) and (os.path.isfile(dir+"/npt.log") ) and (os.path.isfile(dir+"/npt.gro")):
+            warning = wx.MessageDialog(None, "It seems like you've already performed NPT equilibration!\n Are you sure about doing it again?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_NO):
+                return (-1)
+            warning.Destroy()           
+
         status=self.set_pressure(event)
         if(status!=(-1)):
             pre_phase2_command=" -c "+dir+"/"+"nvt.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"npt.tpr"
@@ -659,13 +776,27 @@ class MyMainWindow(wx.Frame):
             else:
                 print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
         
-
     def production_warning(self, event):
         dlg = wx.MessageDialog(None, "Congratulations! \nYou produced a md.tpr file. \nWe suggest you to perform\n production run on a cluster!",'Warning',wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
     
     def OnProduction(self, event):
+        global dir
+        if ( dir == ""):
+            warning = wx.MessageDialog(None, "Hey dude! It seems like you've not opened your project folder. \nWould you like to do that?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_YES):
+                dir_dlg = wx.DirDialog(self, "Choose your working directory:")
+                if dir_dlg.ShowModal() == wx.ID_OK:
+                    self.SetStatusText('You\'ve chosen : %s\n' % dir_dlg.GetPath())
+                    dir = dir_dlg.GetPath()
+                    dir_dlg.Destroy()
+                else:
+                    return (-1)
+            else:
+                return (-1)
+            warning.Destroy()           
         status=self.set_simulation_time(event)
         if(status!=(-1)):
             pre_production_command = dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
