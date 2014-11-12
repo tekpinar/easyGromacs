@@ -180,7 +180,7 @@ class MyMainWindow(wx.Frame):
         quit_menu_item=fileMenu.Append(103, '&Quit', 'Quit Application')
 
         helpMenu=wx.Menu()
-        tutorial_menu_item=helpMenu.Append(wx.ID_ANY, '&Bevan Lab Tutorial Web Page')
+        tutorial_menu_item=helpMenu.Append(wx.ID_ANY, '&Justin Lemkul\'s Tutorial Web Page')
         about_menu_item=helpMenu.Append(wx.ID_ANY, '&About')
 
         menubar.Append(fileMenu, '&File')
@@ -195,7 +195,7 @@ class MyMainWindow(wx.Frame):
 
     def OnAboutDlg(self, event):
         info = wx.AboutDialogInfo()
-        info.Name = "Quick and Dirty Gromacs Tutorial"
+        info.Name = "Quick and Dirty Gromacs"
         info.Version = "0.0.3 Beta"
         info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
         wx.AboutBox(info)
@@ -312,13 +312,13 @@ class MyMainWindow(wx.Frame):
         data_file.close()
         self.Layout()
 
-    def waterchoice(self, event):
-        wm = ['SPC', 'SPCE', 'TIP3P', 'TIP4P']
-        dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', wm, wx.CHOICEDLG_STYLE)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.SetStatusText('You chose: %s\n' % dlg.GetStringSelection())
-        dlg.Destroy()
-        return dlg.GetStringSelection().lower()
+#    def waterchoice(self, event):
+#        wm = ['SPC', 'SPCE', 'TIP3P', 'TIP4P']
+#        dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', wm, wx.CHOICEDLG_STYLE)
+#        if dlg.ShowModal() == wx.ID_OK:
+#            self.SetStatusText('You chose: %s\n' % dlg.GetStringSelection())
+#        dlg.Destroy()
+#        return dlg.GetStringSelection().lower()
 
     def ffchoice(self, event):
         ffm = ['amber03            -AMBER03 protein, nucleic AMBER94 (Duan et al., J. Comp. Chem. 24, 1999-2012, 2003)',\
@@ -356,29 +356,23 @@ class MyMainWindow(wx.Frame):
             solvent_model=dlg.rbox.GetStringSelection().lower()
             force_field=dlg.cb.GetValue()
             self.SetStatusText('You selected %s force field and %s water model. \n' % (solvent_model, force_field))
-        dlg.Destroy()
+            dlg.Destroy()
 ################################
 
          #This / makes it very unix dependent!!!
-
-#        print dir
-#        if(initial_pdb == ""):
-        if(dir == ""):
-            dial=wx.MessageDialog(None, 'You have not opened a pdb file to start!\nGo to File-Open menu!', 'ERROR', wx.OK | wx.ICON_ERROR)
-            dial.ShowModal()
-            dial.Destroy()
-        else:
-#            force_field=self.ffchoice(event)
-            if(force_field !=""):
-#                solvent_model=self.waterchoice(event)
+            if(dir == ""):
+                dial=wx.MessageDialog(None, 'You have not opened a pdb file to start!\nGo to File-Open menu!', 'ERROR', wx.OK | wx.ICON_ERROR)
+                dial.ShowModal()
+                dial.Destroy()
+            else:
+                if(force_field !=""):
                 #This / makes it very unix dependent!!!
-#                os.system("cd "+dir)
-                prepare_command="pdb2gmx -f "+initial_pdb+" -o "+dir+"/"+"processed.pdb -i "+dir+"/"+"posre.itp -p "+dir+"/"+"topol.top -water "\
-                    +solvent_model.lower()+" -ff "+force_field
-                if(version<5.0):
-                    os.system(prepare_command)
-                elif(version>=5):
-                    os.system("gmx "+prepare_command)
+                    prepare_command="pdb2gmx -f "+initial_pdb+" -o "+dir+"/"+"processed.pdb -i "+dir+"/"+"posre.itp -p "+dir+"/"+"topol.top -water "\
+                        +solvent_model.lower()+" -ff "+force_field
+                    if(version<5.0):
+                        os.system(prepare_command)
+                    elif(version>=5):
+                        os.system("gmx "+prepare_command)
 
     def solvate(self, event):
 #####################
@@ -483,6 +477,9 @@ class MyMainWindow(wx.Frame):
                 file_name="./scripts/gromacs_less_than_5/nvt.mdp"
             elif(version>=5.0):
                 file_name="./scripts/gromacs_5_or_more/nvt.mdp"
+#            return 0
+#        else:
+#            return (-1)
 
 #Now, lets set npt.mdp script also to the same temperature. 
 ######################################################################################################################################
@@ -524,23 +521,7 @@ class MyMainWindow(wx.Frame):
             return (-1)
         dlg.Destroy()
 
-    def set_pressure_new(self, event):
-        panel = wx.Panel(self, wx.Frame, -1)
-        myList =['','a','b']
-        rb=wx.RadioBox(self.panel, "Options :", (0, 0), wx.DefaultSize, myList, 2, wx.RA_SPECIFY_COLS)
-        rb.ShowItem(0, show=False)
-#        dlg = wx.NumberEntryDialog( self, "Unit: Bar", "(0-200 frames)", "Tail Length", value=2.0, min=1.0, max=100.0 )
-#        if dlg.ShowModal() == wx.ID_OK:
-#            params.tail_length = dlg.GetValue()
-#        dlg.Destroy()
-
-
     def set_pressure(self, event):
-#        dlg = wx.NumberEntryDialog( self, "Unit: Bar", "(0-200 frames)", "Tail Length", value=params.tail_length, min=1.0, max=100.0 )
-#        if dlg.ShowModal() == wx.ID_OK:
-#            params.tail_length = dlg.GetValue()
-#        dlg.Destroy()
-
         dlg = wx.TextEntryDialog(self, 'Unit: Bar', 'Enter Pressure')
         dlg.SetValue("1.0")
         filename=""
@@ -639,83 +620,74 @@ class MyMainWindow(wx.Frame):
             print "ERROR: Hey dude! I think something is really wrong here in minimization!"                
 
     def OnEquilibratePhase1(self, event):
-        self.set_temperature(event)
-        pre_phase1_command=" -c "+dir+"/"+"em.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"nvt.tpr"
-        if(version<5.0):
-            pre_phase1_command="grompp -f ./scripts/gromacs_less_than_5/nvt.mdp"+pre_phase1_command
-        elif(version>=5.0):
-            pre_phase1_command="gmx grompp -f ./scripts/gromacs_5_or_more/nvt.mdp"+pre_phase1_command
+        status=self.set_temperature(event)
+        if(status!=(-1)):
+            pre_phase1_command=" -c "+dir+"/"+"em.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"nvt.tpr"
+            if(version<5.0):
+                pre_phase1_command="grompp -f ./scripts/gromacs_less_than_5/nvt.mdp"+pre_phase1_command
+            elif(version>=5.0):
+                pre_phase1_command="gmx grompp -f ./scripts/gromacs_5_or_more/nvt.mdp"+pre_phase1_command
 
-        status1=os.system(pre_phase1_command)
-        if(status1 == 0):
-            status2=os.system("mdrun -v -deffnm "+dir+"/"+"nvt")
-            if(status2 == 0):
-                os.system("gmx energy -f "+dir+"/"+"nvt.edr -o "+dir+"/"+"temperature.xvg")
-                self.drawTemperaturevsTime(event)
-                self.SetStatusText('Completed NVT equilibration succesfully!\n')
-        else:
-            print "ERROR: Hey dude! I think something went wrong in NVT simulation!"
+            status1=os.system(pre_phase1_command)
+            if(status1 == 0):
+                status2=os.system("mdrun -v -deffnm "+dir+"/"+"nvt")
+                if(status2 == 0):
+                    os.system("gmx energy -f "+dir+"/"+"nvt.edr -o "+dir+"/"+"temperature.xvg")
+                    self.drawTemperaturevsTime(event)
+                    self.SetStatusText('Completed NVT equilibration succesfully!\n')
+                else:
+                    print "ERROR: Hey dude! I think something went wrong in NVT simulation!"
 
     def OnEquilibratePhase2(self, event):
-        self.set_pressure(event)
-        pre_phase2_command=" -c "+dir+"/"+"nvt.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"npt.tpr"
-        if(version<5.0):
-            pre_phase2_command="grompp -f ./scripts/gromacs_less_than_5/npt.mdp"+pre_phase2_command
-        elif(version>=5.0):
-            pre_phase2_command="gmx grompp -f ./scripts/gromacs_5_or_more/npt.mdp"+pre_phase2_command
+        status=self.set_pressure(event)
+        if(status!=(-1)):
+            pre_phase2_command=" -c "+dir+"/"+"nvt.gro -p "+dir+"/"+"topol.top -o "+dir+"/"+"npt.tpr"
+            if(version<5.0):
+                pre_phase2_command="grompp -f ./scripts/gromacs_less_than_5/npt.mdp"+pre_phase2_command
+            elif(version>=5.0):
+                pre_phase2_command="gmx grompp -f ./scripts/gromacs_5_or_more/npt.mdp"+pre_phase2_command
 
-        status1=os.system(pre_phase2_command)
-        if(status1 == 0):
-            status2=os.system("mdrun -v -deffnm "+dir+"/"+"npt")
-            if(status2 == 0):
-                os.system("gmx energy -f "+dir+"/"+"npt.edr -o "+dir+"/"+"pressure.xvg")
-                self.drawPressurevsTime(event)
-                self.SetStatusText('Completed NVT equilibration succesfully!\n')
-        else:
-            print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
+            status1=os.system(pre_phase2_command)
+            if(status1 == 0):
+                status2=os.system("mdrun -v -deffnm "+dir+"/"+"npt")
+                if(status2 == 0):
+                    os.system("gmx energy -f "+dir+"/"+"npt.edr -o "+dir+"/"+"pressure.xvg")
+                    self.drawPressurevsTime(event)
+                    self.SetStatusText('Completed NVT equilibration succesfully!\n')
+                else:
+                    print "ERROR: Hey dude! I think something went wrong in NPT results plotting precedure!"
+            else:
+                print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
         
+
     def production_warning(self, event):
         dlg = wx.MessageDialog(None, "Congratulations! \nYou produced a md.tpr file. \nWe suggest you to perform\n production run on a cluster!",'Warning',wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
     
     def OnProduction(self, event):
-        self.set_simulation_time(event)
-        pre_production_command = dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
-        if(version<5.0):
-            pre_production_command="grompp -f ./scripts/gromacs_less_than_5/md.mdp -c "+pre_production_command
-        elif(version>=5.0):
-            pre_production_command="gmx grompp -f ./scripts/gromacs_5_or_more/md.mdp -c "+pre_production_command
+        status=self.set_simulation_time(event)
+        if(status!=(-1)):
+            pre_production_command = dir+"/"+"npt.gro -t "+dir+"/"+"npt.cpt -p "+dir+"/"+"topol.top -o "+dir+"/"+"md_0_1.tpr"
+            if(version<5.0):
+                pre_production_command="grompp -f ./scripts/gromacs_less_than_5/md.mdp -c "+pre_production_command
+            elif(version>=5.0):
+                pre_production_command="gmx grompp -f ./scripts/gromacs_5_or_more/md.mdp -c "+pre_production_command
 
-        status1=os.system(pre_production_command)
-        if(status==0):
-            self.production_warning(event)
-        else:
-            print "ERROR: Hey dude! I think something went wrong in Pre Production run!"
+            status1=os.system(pre_production_command)
+            if(status1==0):
+                self.production_warning(event)
+            else:
+                print "ERROR: Hey dude! I think something went wrong in Pre Production run!"
     
     def OnQuit(self, e):
         self.Close()
-
-#class p1(wx.Panel):
-#    def __init__(self, parent):
-#        wx.Frame.__init__(self, parent, title="title", size=(50, 50))#
-#
-#        #configure graph
-#        self.figure = matplotlib.figure.Figure()
-#        self.axes   = self.figure.add_subplot(111)
-#        t=numpy.arange(0.0, 10, 1.0)
-#        s=[0,1,0,1,0,2,1,2,1,0]
-#        self.y_max =10
-#        self.axes.plot(t,s)
-#        self.canvas=FigureCanvas(self, -1, self.figure)
 
 class MyApp(wx.App):
     def OnInit(self):
         frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs')
         frame.Show(True)
         return True
-
-
 
 app = MyApp(0)
 app.MainLoop()
