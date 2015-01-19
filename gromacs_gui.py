@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import wx
+import wx.lib.filebrowsebutton
 import os
 import webbrowser
 import numpy
@@ -13,6 +14,73 @@ base=""
 dir=""
 version=5.02
 #version=4.5
+
+class RMSD_Dialog(wx.Dialog):
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        wx.Dialog.__init__(self, None, title="RMSD Setup")
+        self.SetSize((450, 280))
+        type_lst = ["CA", "Backbone", "All atoms"]
+        self.rbox1=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
+        sel_atms_text=wx.StaticText(self, label=' Selected atoms        :')
+
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1.Add(sel_atms_text)
+        hbox1.Add(self.rbox1)
+
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        init_frm_text=wx.StaticText(self, label=' Initial frame             : ')
+        self.num_entry1 = wx.TextCtrl(self)
+        self.num_entry1.SetValue("0")
+
+        fnl_frm_text=wx.StaticText(self, label='Final frame:')
+        self.num_entry2 = wx.TextCtrl(self)
+        self.num_entry2.SetValue("-1")
+
+        hbox2.Add(init_frm_text, 0, wx.ALL, 0)
+        hbox2.Add(self.num_entry1, 0, wx.ALL, 0)
+
+        hbox2.Add(fnl_frm_text, 0, wx.ALL, 0)
+        hbox2.Add(self.num_entry2, 0, wx.ALL, 0)
+
+
+        self.fbb1 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a reference file:", fileMask="*.pdb")
+        self.fbb2 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a trajectory file:", fileMask="*.xtc")
+
+        hbox5 = wx.BoxSizer(wx.HORIZONTAL)
+        outfile_text=wx.StaticText(self, label='Output file name     :')
+        self.outfile = wx.TextCtrl(self)
+        self.outfile.SetValue("rmsd.xvg")
+        hbox5.Add(outfile_text, 0, wx.ALL, 5)
+        hbox5.Add(self.outfile, 0, wx.ALL, 5)        
+
+        self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        vbox.Add(self.fbb1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)        
+        vbox.Add(self.fbb2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)        
+        vbox.Add(hbox5, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+
+        vbox.Add(hbox1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+        vbox.Add(hbox2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+
+        vbox.Add(self.btns, flag=wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, border=5)
+
+        self.SetSizer(vbox)
+
+    def openrefpdb(self, event):
+       dlg = wx.FileDialog(self, "Choose an initial pdb file", os.getcwd(), "", "*.pdb", wx.OPEN)
+       if dlg.ShowModal() == wx.ID_OK:
+           return dlg.GetPath()
+       dlg.Destroy()
+
+    def opentrajectory(self, event):
+       dlg = wx.FileDialog(self, "Choose an initial xtc file", os.getcwd(), "", "*.xtc", wx.OPEN)
+       if dlg.ShowModal() == wx.ID_OK:
+           return dlg.GetPath()
+       dlg.Destroy()
+
 
 class IonizationDialog(wx.Dialog):
     #----------------------------------------------------------------------
@@ -103,7 +171,6 @@ class PreparationDialog(wx.Dialog):
 
         self.SetSizer(vbox)
 
-
 class MyMainWindow(wx.Frame):
     def __init__(self, parent, id, title):
         wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(800, 600))
@@ -117,14 +184,25 @@ class MyMainWindow(wx.Frame):
         self.canvas = FigureCanvas(self, -1, self.figure)
         self.plottoolbar = NavigationToolbar(self.canvas)
 
-        self.button1 = wx.Button(self, -1, "Plot Total Energy vs. Time")
-        self.button1.Bind(wx.EVT_BUTTON, self.changePlot)
+        self.button1 = wx.Button(self, -1, "Plot RMSD")
 
-        self.button2 = wx.Button(self, -1, "Plot Temperature vs. Time")
+        self.button1.Bind(wx.EVT_BUTTON, self.OnPlotRMSD)
+#        self.button1.Bind(wx.EVT_BUTTON, self.changePlot)
+
+        self.button2 = wx.Button(self, -1, "Plot RMSF")
 #        self.button2.Bind(wx.EVT_BUTTON, self.drawTemperaturevsTime())
 
-        self.button3 = wx.Button(self, -1, "Plot Pressure vs. Time")
+        self.button3 = wx.Button(self, -1, "Plot PCA")
 #        self.button3.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
+
+        self.button4 = wx.Button(self, -1, "Plot Energy")
+#        self.button4.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
+
+        self.button5 = wx.Button(self, -1, "Plot Temperature")
+#        self.button5.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
+
+        self.button6 = wx.Button(self, -1, "Plot Pressure")
+#        self.button6.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
 
         #Toolbar items
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
@@ -146,6 +224,9 @@ class MyMainWindow(wx.Frame):
         self.sizer2.Add(self.button1, -1, wx.EXPAND)
         self.sizer2.Add(self.button2, -1, wx.EXPAND)
         self.sizer2.Add(self.button3, -1, wx.EXPAND)
+        self.sizer2.Add(self.button4, -1, wx.EXPAND)
+        self.sizer2.Add(self.button5, -1, wx.EXPAND)
+        self.sizer2.Add(self.button6, -1, wx.EXPAND)
 
         vbox.Add(toolbar, 0, wx.EXPAND)
         vbox.Add(self.plottoolbar, 0, wx.EXPAND)
@@ -196,7 +277,7 @@ class MyMainWindow(wx.Frame):
     def OnAboutDlg(self, event):
         info = wx.AboutDialogInfo()
         info.Name = "Quick and Dirty Gromacs"
-        info.Version = "0.0.3 Beta"
+        info.Version = "0.0.4 Beta"
         info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
         wx.AboutBox(info)
 
@@ -228,6 +309,71 @@ class MyMainWindow(wx.Frame):
 #    def OnSave(self, event):
 #        self.statusbar.SetStatusText('Save Command')
     
+    def OnPlotRMSD(self, event):
+        dlg = RMSD_Dialog()
+        if (dlg.ShowModal()==wx.ID_OK):
+            atom_selection=dlg.rbox1.GetStringSelection().upper()
+            beg_frame=dlg.num_entry1.GetValue()
+            end_frame=dlg.num_entry2.GetValue()
+            if(atom_selection == "CA"):
+                echo_string="echo 3 3|"
+            elif (atom_selection == "BACKBONE"):
+                echo_string="echo 4 4|"
+            else:
+                echo_string=""
+
+            ref_file=dlg.fbb1.GetValue()
+            trj_file=dlg.fbb2.GetValue()
+            out_file=dlg.outfile.GetValue()
+        
+            #Prepare for rmsd calculation
+            if(end_frame!="-1"):
+                rmsd_command="rms -s "+ref_file+" -f "+trj_file+" -o "+out_file+" -tu ns "+"-b "+beg_frame+" -e "+end_frame
+            else:
+                rmsd_command="rms -s "+ref_file+" -f "+trj_file+" -o "+out_file+" -tu ns "+"-b "+beg_frame
+
+            print rmsd_command
+            error_message="ERROR: Something went wrong in rmsd procedure! Check log files!"
+            if(version<5.0):
+                status=os.system(echo_string+"g_"+rmsd_command)
+                if(status==0):
+                #Plot RMSD on canvas
+                    self.drawRMSDvsTime(out_file)
+                else:
+                    print (error_message)
+
+            elif(version>=5.0):
+                status=os.system(echo_string+"gmx "+rmsd_command)
+                if(status==0):
+                #Plot RMSD on canvas
+                    self.drawRMSDvsTime(out_file)
+                else:
+                    print (error_message)                    
+        dlg.Destroy()
+####################
+    def drawRMSDvsTime(self, out_file):
+        data_file=open(out_file, "r")
+        lines=data_file.readlines()
+        md_pc1=[]
+        md_pc2=[]
+        counter=0
+        for line in lines:
+            if((line[0]!='#') and (line[0]!='@')):
+#                print line
+                md_pc1.append(float(line.split()[0]))
+                md_pc2.append(float(line.split()[1]))
+                counter+=1
+
+        self.axes.clear()
+        self.axes.set_xlim([min(md_pc1),max(md_pc1)])
+        self.axes.plot(md_pc1, md_pc2)
+        self.axes.grid()
+        self.axes.set_xlabel("Time (ns)") 
+        self.axes.set_ylabel("RMSD (nm)") 
+        data_file.close()
+        self.Layout()
+
+####################        
     def changePlot(self, event):
         if self.current_draw == 'sin' :
             self.drawLines()
@@ -312,14 +458,6 @@ class MyMainWindow(wx.Frame):
         data_file.close()
         self.Layout()
 
-#    def waterchoice(self, event):
-#        wm = ['SPC', 'SPCE', 'TIP3P', 'TIP4P']
-#        dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', wm, wx.CHOICEDLG_STYLE)
-#        if dlg.ShowModal() == wx.ID_OK:
-#            self.SetStatusText('You chose: %s\n' % dlg.GetStringSelection())
-#        dlg.Destroy()
-#        return dlg.GetStringSelection().lower()
-
     def ffchoice(self, event):
         ffm = ['amber03            -AMBER03 protein, nucleic AMBER94 (Duan et al., J. Comp. Chem. 24, 1999-2012, 2003)',\
                    'amber94       -AMBER94 force field (Cornell et al., JACS 117, 5179-5197, 1995)',\
@@ -337,9 +475,6 @@ class MyMainWindow(wx.Frame):
                    'gromos54a7    -GROMOS96 54a7 force field (Eur. Biophys. J. (2011), 40,, 843-856, DOI: 10.1007/s00249-011-0700-9)',\
                    'oplsaa        -OPLS-AA/L all-atom force field (2001 aminoacid dihedrals)']
 
-
-
-
         dlg = wx.SingleChoiceDialog(self, 'Select water model', 'Which one?', ffm, wx.CHOICEDLG_STYLE)
         if dlg.ShowModal() == wx.ID_OK:
             self.SetStatusText('You chose: %s\n' % dlg.GetStringSelection())
@@ -349,7 +484,24 @@ class MyMainWindow(wx.Frame):
     def OnPrepare(self, event):
         global solvent_model 
         force_field=""
+        global dir
+        if ( dir == ""):
+            warning = wx.MessageDialog(None, "Hey dude! It seems like you've not opened your project folder. \nWould you like to do that?",\
+                                           'Warning', wx.YES_NO | wx.ICON_INFORMATION)
+            if(warning.ShowModal()==wx.ID_YES):
+                dir_dlg = wx.DirDialog(self, "Choose your working directory:")
+                if dir_dlg.ShowModal() == wx.ID_OK:
+                    self.SetStatusText('You\'ve chosen : %s\n' % dir_dlg.GetPath())
+                    dir = dir_dlg.GetPath()
+                    dir_dlg.Destroy()
+                else:
+                    return (-1)
+            else:
+                return (-1)
+            warning.Destroy()           
+
         initial_pdb=dir+"/"+base
+
 ###############################
         dlg = PreparationDialog()
         if (dlg.ShowModal()==wx.ID_OK):
@@ -358,7 +510,6 @@ class MyMainWindow(wx.Frame):
             self.SetStatusText('You selected %s force field and %s water model. \n' % (solvent_model, force_field))
             dlg.Destroy()
 ################################
-
          #This / makes it very unix dependent!!!
             if(dir == ""):
                 dial=wx.MessageDialog(None, 'You have not opened a pdb file to start!\nGo to File-Open menu!', 'ERROR', wx.OK | wx.ICON_ERROR)
@@ -412,7 +563,7 @@ class MyMainWindow(wx.Frame):
         #Define box properties
         #boxtype=self.boxtypechoice(event)
         #buffer=self.set_buffer_distance(event)
-        error_message="ERROR: Hey dude! Something went wrong in solvation precedure! Check log files!"
+        error_message="ERROR: Hey dude! Something went wrong in solvation procedure! Check log files!"
         presolvate_command="editconf -f "+dir+"/"+"processed.pdb -o "+dir+"/"+"newbox.pdb -bt "+boxtype+" -c -d "+buffer
         if(boxtype != ""):
             if(version<5.0):
@@ -481,7 +632,7 @@ class MyMainWindow(wx.Frame):
             if(ion_concentration !=""):
                 ionize_command=ionize_command+" -conc 0.15"    
 
-                error_message="ERROR: Something went wrong in ionization precedure! Check log files!"
+                error_message="ERROR: Something went wrong in ionization procedure! Check log files!"
                 if(version<5.0):
                     status=os.system("grompp -f ./scripts/gromacs_less_than_5/ions.mdp "+preprocess_command)
                     if(status==0):
@@ -772,7 +923,7 @@ class MyMainWindow(wx.Frame):
                     self.drawPressurevsTime(event)
                     self.SetStatusText('Completed NVT equilibration succesfully!\n')
                 else:
-                    print "ERROR: Hey dude! I think something went wrong in NPT results plotting precedure!"
+                    print "ERROR: Hey dude! I think something went wrong in NPT results plotting procedure!"
             else:
                 print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
         
