@@ -150,14 +150,14 @@ class PCA_Dialog(wx.Dialog):
     def __init__(self):
         """Constructor"""
         wx.Dialog.__init__(self, None, title="PCA Setup")
-        self.SetSize((450, 280))
+        self.SetSize((450, 375))
         type_lst = ["CA", "Backbone", "All atoms"]
-        self.rbox1=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
+        self.rbox0=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
         sel_atms_text=wx.StaticText(self, label=' Selected atoms        :')
 
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         hbox1.Add(sel_atms_text)
-        hbox1.Add(self.rbox1)
+        hbox1.Add(self.rbox0)
 
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         init_frm_text=wx.StaticText(self, label=' Initial frame             : ')
@@ -177,6 +177,24 @@ class PCA_Dialog(wx.Dialog):
         self.fbb1 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a reference file:", fileMask="*.pdb")
         self.fbb2 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a trajectory file:", fileMask="*.xtc")
 
+############################################
+        pc_lst = ["1", "2", "3", "4"]
+        self.rbox1=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, pc_lst, 4, wx.RA_SPECIFY_COLS)
+        sel_pc1_text=wx.StaticText(self, label=' The first PC              :')
+
+        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox3.Add(sel_pc1_text)
+        hbox3.Add(self.rbox1)
+
+        self.rbox2=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, pc_lst, 4, wx.RA_SPECIFY_COLS)
+        self.rbox2.SetSelection(1)  
+        sel_pc2_text=wx.StaticText(self, label=' The second PC         :')
+
+        hbox4 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox4.Add(sel_pc2_text)
+        hbox4.Add(self.rbox2)
+
+############################################
         hbox5 = wx.BoxSizer(wx.HORIZONTAL)
         outfile_text=wx.StaticText(self, label='Output file name     :')
         self.outfile = wx.TextCtrl(self)
@@ -193,6 +211,9 @@ class PCA_Dialog(wx.Dialog):
 
         vbox.Add(hbox1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
         vbox.Add(hbox2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+
+        vbox.Add(hbox3, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+        vbox.Add(hbox4, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
 
         vbox.Add(self.btns, flag=wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, border=5)
 
@@ -518,7 +539,9 @@ class MyMainWindow(wx.Frame):
     def OnPlotPCA(self, event):
         dlg = PCA_Dialog()
         if (dlg.ShowModal()==wx.ID_OK):
-            atom_selection=dlg.rbox1.GetStringSelection().upper()
+            atom_selection=dlg.rbox0.GetStringSelection().upper()
+            pcA=dlg.rbox1.GetStringSelection()
+            pcB=dlg.rbox2.GetStringSelection()
             beg_frame=dlg.num_entry1.GetValue()
             end_frame=dlg.num_entry2.GetValue()
             if(atom_selection == "CA"):
@@ -532,7 +555,7 @@ class MyMainWindow(wx.Frame):
             trj_file=dlg.fbb2.GetValue()
             out_file=dlg.outfile.GetValue()
             pca_command1="covar -f "+trj_file+" -s "+ref_file+" -o eigenval.xvg -v eigenvec.trr"
-            pca_command2="anaeig -f "+trj_file+" -s "+ref_file+" -v eigenvec.trr -2d "+out_file+" -first 1 -last 2"        
+            pca_command2="anaeig -f "+trj_file+" -s "+ref_file+" -v eigenvec.trr -2d "+out_file+" -first "+pcA+" -last "+pcB        
 
 #            #Prepare for rmsf calculation
 #            if((end_frame!="-1") and (beg_frame!="0")):
@@ -550,7 +573,7 @@ class MyMainWindow(wx.Frame):
 
             if((status1==0) and (status2==0)):
             #Plot RMSF on canvas
-                self.drawPC_A_vs_PC_B(out_file, "PC1 (nm)", "PC2 (nm)")
+                self.drawPC_A_vs_PC_B(out_file, "PC"+pcA+" (nm)", "PC"+pcB+" (nm)")
             else:
                 print (error_message)
 
@@ -600,7 +623,7 @@ class MyMainWindow(wx.Frame):
             md_time_percentage.append(time_percentage)
 
         self.axes.clear()
-        self.axes.set_xlim([min(md_pc1),max(md_pc1)])
+#        self.axes.set_xlim([min(md_pc1),max(md_pc1)])
 #        self.axes.scatter(md_pc1, md_pc2)
         self.axes.scatter(md_pc1, md_pc2, marker='o', c=[md_time_percentage], s=10)    
 #        cb=self.axes.colorbar()
