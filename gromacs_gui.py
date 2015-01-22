@@ -15,11 +15,10 @@ dir=""
 version=5.02
 #version=4.5
 
-class RMSD_Dialog(wx.Dialog):
-    #----------------------------------------------------------------------
-    def __init__(self):
+class RMS_D_and_F_Dialog(wx.Dialog):
+    def __init__(self, which_box_string):
         """Constructor"""
-        wx.Dialog.__init__(self, None, title="RMSD Setup")
+        wx.Dialog.__init__(self, None, title=which_box_string+" Setup")
         self.SetSize((550, 280))
         type_lst = ["CA", "Backbone", "All atoms"]
         self.rbox1=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
@@ -50,7 +49,7 @@ class RMSD_Dialog(wx.Dialog):
         hbox5 = wx.BoxSizer(wx.HORIZONTAL)
         outfile_text=wx.StaticText(self, label='Output file name     :')
         self.outfile = wx.TextCtrl(self)
-        self.outfile.SetValue("rmsd.xvg")
+        self.outfile.SetValue(which_box_string.lower()+".xvg")
         hbox5.Add(outfile_text, 0, wx.ALL, 5)
         hbox5.Add(self.outfile, 0, wx.ALL, 5)        
 
@@ -80,70 +79,6 @@ class RMSD_Dialog(wx.Dialog):
            return dlg.GetPath()
        dlg.Destroy()
 
-class RMSF_Dialog(wx.Dialog):
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
-        wx.Dialog.__init__(self, None, title="RMSF Setup")
-        self.SetSize((550, 280))
-        type_lst = ["CA", "Backbone", "All atoms"]
-        self.rbox1=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
-        sel_atms_text=wx.StaticText(self, label=' Selected atoms        :')
-
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1.Add(sel_atms_text)
-        hbox1.Add(self.rbox1)
-
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        init_frm_text=wx.StaticText(self, label=' Initial frame             : ')
-        self.num_entry1 = wx.TextCtrl(self)
-        self.num_entry1.SetValue("0")
-
-        fnl_frm_text=wx.StaticText(self, label='Final frame:')
-        self.num_entry2 = wx.TextCtrl(self)
-        self.num_entry2.SetValue("-1")
-
-        hbox2.Add(init_frm_text, 0, wx.ALL, 0)
-        hbox2.Add(self.num_entry1, 0, wx.ALL, 0)
-
-        hbox2.Add(fnl_frm_text, 0, wx.ALL, 0)
-        hbox2.Add(self.num_entry2, 0, wx.ALL, 0)
-
-        self.fbb1 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a reference file:", fileMask="*.pdb")
-        self.fbb2 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a trajectory file:", fileMask="*.xtc")
-
-        hbox5 = wx.BoxSizer(wx.HORIZONTAL)
-        outfile_text=wx.StaticText(self, label='Output file name     :')
-        self.outfile = wx.TextCtrl(self)
-        self.outfile.SetValue("rmsf.xvg")
-        hbox5.Add(outfile_text, 0, wx.ALL, 5)
-        hbox5.Add(self.outfile, 0, wx.ALL, 5)        
-
-        self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-
-        vbox.Add(self.fbb1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)        
-        vbox.Add(self.fbb2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)        
-        vbox.Add(hbox5, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
-
-        vbox.Add(hbox1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
-        vbox.Add(hbox2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
-
-        vbox.Add(self.btns, flag=wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, border=5)
-
-        self.SetSizer(vbox)
-
-    def openrefpdb(self, event):
-       dlg = wx.FileDialog(self, "Choose an initial pdb file", os.getcwd(), "", "*.pdb", wx.OPEN)
-       if dlg.ShowModal() == wx.ID_OK:
-           return dlg.GetPath()
-       dlg.Destroy()
-
-    def opentrajectory(self, event):
-       dlg = wx.FileDialog(self, "Choose an initial xtc file", os.getcwd(), "", "*.xtc", wx.OPEN)
-       if dlg.ShowModal() == wx.ID_OK:
-           return dlg.GetPath()
-       dlg.Destroy()
 
 class PCA_Dialog(wx.Dialog):
     #----------------------------------------------------------------------
@@ -394,7 +329,13 @@ class MyMainWindow(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.openfile, id=2)
 #        self.Bind(wx.EVT_TOOL, self.OnSave, id=3)
         self.Bind(wx.EVT_TOOL, self.OnExit, id=4)
+
         self.Bind(wx.EVT_TOOL, self.OnPrepare, id=7)
+        self.Bind(wx.EVT_ENTER_WINDOW, self.OnEnter, id=7)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave, id=7)
+
+
+
         self.Bind(wx.EVT_TOOL, self.OnSolvate, id=9)
         self.Bind(wx.EVT_TOOL, self.OnIonize, id=10)
         self.Bind(wx.EVT_TOOL, self.OnMinimize, id=11)
@@ -423,6 +364,18 @@ class MyMainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnAboutDlg, about_menu_item)
         self.Bind(wx.EVT_MENU, self.OnOpenTutorial, tutorial_menu_item)
         self.SetMenuBar(menubar)
+
+    def OnEnter(self, event):
+        btn = event.GetEventObject()   
+#self.panel.SetBackgroundColour('Green')
+#        self.panel.Refresh()     
+        btn.SetBackgroundColour('Green')
+        btn.Refresh()
+        
+    def OnLeave(self, event):
+        #            btn = e.GetEventObject()
+        self.SetBackgroundColour('DARKGREY', id=7)
+#            btn.Refresh()
 
     def OnAboutDlg(self, event):
         info = wx.AboutDialogInfo()
@@ -460,7 +413,7 @@ class MyMainWindow(wx.Frame):
 #        self.statusbar.SetStatusText('Save Command')
     
     def OnPlotRMSD(self, event):
-        dlg = RMSD_Dialog()
+        dlg = RMS_D_and_F_Dialog("RMSD")
         if (dlg.ShowModal()==wx.ID_OK):
             atom_selection=dlg.rbox1.GetStringSelection().upper()
             beg_frame=dlg.num_entry1.GetValue()
@@ -499,7 +452,7 @@ class MyMainWindow(wx.Frame):
 
 ####################
     def OnPlotRMSF(self, event):
-        dlg = RMSF_Dialog()
+        dlg = RMS_D_and_F_Dialog("RMSF")
         if (dlg.ShowModal()==wx.ID_OK):
             atom_selection=dlg.rbox1.GetStringSelection().upper()
             beg_frame=dlg.num_entry1.GetValue()
