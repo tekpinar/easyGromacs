@@ -5,6 +5,8 @@ import os
 import webbrowser
 import numpy
 import matplotlib
+
+#from chemlab.io import datafile
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as NavigationToolbar
@@ -15,11 +17,78 @@ dir=""
 version=5.02
 #version=4.5
 
+class Energy_Dialog(wx.Dialog):
+    def __init__(self):
+        """Constructor"""
+        wx.Dialog.__init__(self, None, title="Energy Plot")
+        self.SetSize((550, 300))
+
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.bond = wx.CheckBox(self, label="Bond")
+        self.bond.SetValue(False)
+
+        self.angle = wx.CheckBox(self, label="Angle")
+        self.angle.SetValue(False)
+
+        self.proper_dih = wx.CheckBox(self, label="Proper Dihedral")
+        self.proper_dih.SetValue(False)
+
+        self.improper_dih = wx.CheckBox(self, label="Improper Dihedral")
+        self.improper_dih.SetValue(False)
+
+        hbox1.Add(self.bond,  0, wx.ALL, 5)
+        hbox1.Add(self.angle, 0, wx.ALL, 5)
+        hbox1.Add(self.proper_dih, 0, wx.ALL, 5)
+        hbox1.Add(self.improper_dih, 0, wx.ALL, 5)
+
+        self.LJ = wx.CheckBox(self, label="Van der Waals")
+        self.LJ.SetValue(False)
+
+        self.coulomb = wx.CheckBox(self, label="Electrostatic")
+        self.coulomb.SetValue(False)
+
+        self.potential = wx.CheckBox(self, label="Potential")
+        self.potential.SetValue(False)
+
+        hbox2.Add(self.LJ,  0, wx.ALL, 5)
+        hbox2.Add(self.coulomb, 0, wx.ALL, 5)
+        hbox2.Add(self.potential, 0, wx.ALL, 5)
+
+
+        self.fbb = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select an energy file:", fileMask="*.edr")
+
+        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
+        outfile_text=wx.StaticText(self, label='Output file name     :')
+        self.outfile = wx.TextCtrl(self)
+        self.outfile.SetValue("energy.xvg")
+        hbox3.Add(outfile_text, 0, wx.ALL, 5)
+        hbox3.Add(self.outfile, 0, wx.ALL, 5)        
+
+        self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        vbox.Add(self.fbb, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)        
+        vbox.Add(hbox3, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+
+        vbox.Add(hbox1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+        vbox.Add(hbox2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+        vbox.Add(self.btns, flag=wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, border=5)
+
+        self.SetSizer(vbox)
+
+    def openedrfile(self, event):
+       dlg = wx.FileDialog(self, "Choose an energy file", os.getcwd(), "", "*.edr", wx.OPEN)
+       if dlg.ShowModal() == wx.ID_OK:
+           return dlg.GetPath()
+       dlg.Destroy()
+
 class RMS_D_and_F_Dialog(wx.Dialog):
     def __init__(self, which_box_string):
         """Constructor"""
         wx.Dialog.__init__(self, None, title=which_box_string+" Setup")
-        self.SetSize((550, 280))
+        self.SetSize((550, 290))
         type_lst = ["CA", "Backbone", "All atoms"]
         self.rbox1=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
         sel_atms_text=wx.StaticText(self, label=' Selected atoms        :')
@@ -85,7 +154,7 @@ class PCA_Dialog(wx.Dialog):
     def __init__(self):
         """Constructor"""
         wx.Dialog.__init__(self, None, title="PCA Setup")
-        self.SetSize((550, 375))
+        self.SetSize((550, 380))
         type_lst = ["CA", "Backbone", "All atoms"]
         self.rbox0=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
         sel_atms_text=wx.StaticText(self, label=' Selected atoms        :')
@@ -278,6 +347,7 @@ class MyMainWindow(wx.Frame):
         self.button3.Bind(wx.EVT_BUTTON, self.OnPlotPCA)
 
         self.button4 = wx.Button(self, -1, "Plot Energy")
+        self.button4.Bind(wx.EVT_BUTTON, self.OnPlotEnergy)
 #        self.button4.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
 
         self.button5 = wx.Button(self, -1, "Plot Temperature")
@@ -533,6 +603,45 @@ class MyMainWindow(wx.Frame):
         dlg.Destroy()
 
 ####################
+    def OnPlotEnergy(self, event):
+        dlg = Energy_Dialog()
+        if (dlg.ShowModal()==wx.ID_OK):
+            print "Test!"
+#            atom_selection=dlg.rbox0.GetStringSelection().upper()
+#            pcA=dlg.rbox1.GetStringSelection()
+#            pcB=dlg.rbox2.GetStringSelection()
+#            beg_frame=dlg.num_entry1.GetValue()
+#            end_frame=dlg.num_entry2.GetValue()
+#            if(atom_selection == "CA"):
+#                echo_string="echo 3 3|"
+#            elif (atom_selection == "BACKBONE"):
+#                echo_string="echo 4 4|"
+#            else:
+#                echo_string=""
+
+#            ref_file=dlg.fbb1.GetValue()
+#            trj_file=dlg.fbb2.GetValue()
+#            out_file=dlg.outfile.GetValue()
+#            pca_command1="covar -f "+trj_file+" -s "+ref_file+" -o eigenval.xvg -v eigenvec.trr"
+#            pca_command2="anaeig -f "+trj_file+" -s "+ref_file+" -v eigenvec.trr -2d "+out_file+" -first "+pcA+" -last "+pcB        
+
+
+#            error_message="ERROR: Something went wrong in PCA procedure! Check log files!"
+#            if(version<5.0):
+#                status1=os.system(echo_string+"g_"+pca_command1)
+#                status2=os.system(echo_string+"g_"+pca_command2)
+#            elif(version>=5.0):
+#                status1=os.system(echo_string+"gmx "+pca_command1)
+#                status2=os.system(echo_string+"gmx "+pca_command2)
+
+#           if((status1==0) and (status2==0)):
+#           #Plot RMSF on canvas
+#               self.drawPC_A_vs_PC_B(out_file, "PC"+pcA+" (nm)", "PC"+pcB+" (nm)")
+#           else:
+#               print (error_message)
+
+#            dlg.Destroy()
+
 
     def drawBlahvsBlah(self, out_file, x_label_string, y_label_string):
         data_file=open(out_file, "r")
