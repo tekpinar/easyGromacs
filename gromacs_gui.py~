@@ -6,9 +6,6 @@ import webbrowser
 import numpy
 import matplotlib
 
-from chemlab.graphics import QtViewer
-#from chemlab.io import *
-#from chemlab.core import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as NavigationToolbar

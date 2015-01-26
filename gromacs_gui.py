@@ -422,8 +422,8 @@ class MyMainWindow(wx.Frame):
 
     def OnAboutDlg(self, event):
         info = wx.AboutDialogInfo()
-        info.Name = "Quick and Dirty Gromacs"
-        info.Version = "0.0.4 Beta"
+        info.Name = "Easy GROMACS"
+        info.Version = "0.0.5 Beta"
         info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
         wx.AboutBox(info)
 
@@ -1244,7 +1244,7 @@ class MyMainWindow(wx.Frame):
 
 class MyApp(wx.App):
     def OnInit(self):
-        frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs')
+        frame = MyMainWindow(None, -1, 'Easy GROMACS')
         frame.Show(True)
         return True
 
