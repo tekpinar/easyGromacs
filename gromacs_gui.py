@@ -6,7 +6,6 @@ import webbrowser
 import numpy
 import matplotlib
 
-#from chemlab.io import datafile
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as NavigationToolbar
@@ -17,65 +16,19 @@ dir=""
 version=5.02
 #version=4.5
 
-class Energy_Dialog(wx.Dialog):
+class Energy_Options_Check_Dialog(wx.Dialog):
     def __init__(self):
         """Constructor"""
-        wx.Dialog.__init__(self, None, title="Energy Plot")
-        self.SetSize((550, 300))
-
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.bond = wx.CheckBox(self, label="Bond")
-        self.bond.SetValue(False)
-
-        self.angle = wx.CheckBox(self, label="Angle")
-        self.angle.SetValue(False)
-
-        self.proper_dih = wx.CheckBox(self, label="Proper Dihedral")
-        self.proper_dih.SetValue(False)
-
-        self.improper_dih = wx.CheckBox(self, label="Improper Dihedral")
-        self.improper_dih.SetValue(False)
-
-        hbox1.Add(self.bond,  0, wx.ALL, 5)
-        hbox1.Add(self.angle, 0, wx.ALL, 5)
-        hbox1.Add(self.proper_dih, 0, wx.ALL, 5)
-        hbox1.Add(self.improper_dih, 0, wx.ALL, 5)
-
-        self.LJ = wx.CheckBox(self, label="Van der Waals")
-        self.LJ.SetValue(False)
-
-        self.coulomb = wx.CheckBox(self, label="Electrostatic")
-        self.coulomb.SetValue(False)
-
-        self.potential = wx.CheckBox(self, label="Potential")
-        self.potential.SetValue(False)
-
-        hbox2.Add(self.LJ,  0, wx.ALL, 5)
-        hbox2.Add(self.coulomb, 0, wx.ALL, 5)
-        hbox2.Add(self.potential, 0, wx.ALL, 5)
-
+        wx.Dialog.__init__(self, None, title="Check Available Energy Options")
+        self.SetSize((550, 100))
 
         self.fbb = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select an energy file:", fileMask="*.edr")
 
-        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        outfile_text=wx.StaticText(self, label='Output file name     :')
-        self.outfile = wx.TextCtrl(self)
-        self.outfile.SetValue("energy.xvg")
-        hbox3.Add(outfile_text, 0, wx.ALL, 5)
-        hbox3.Add(self.outfile, 0, wx.ALL, 5)        
-
         self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
+
         vbox = wx.BoxSizer(wx.VERTICAL)
-
         vbox.Add(self.fbb, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)        
-        vbox.Add(hbox3, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
-
-        vbox.Add(hbox1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
-        vbox.Add(hbox2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
         vbox.Add(self.btns, flag=wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, border=5)
-
         self.SetSizer(vbox)
 
     def openedrfile(self, event):
@@ -83,6 +36,35 @@ class Energy_Dialog(wx.Dialog):
        if dlg.ShowModal() == wx.ID_OK:
            return dlg.GetPath()
        dlg.Destroy()
+
+class Energy_Plot_Dialog(wx.Dialog):
+    def __init__(self, energy_list):
+        """Constructor"""
+        wx.Dialog.__init__(self, None, title="Plot Energy")
+        self.SetSize((550, 150))
+
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        outfile_text=wx.StaticText(self, label='Output file name   :')
+        self.outfile = wx.TextCtrl(self)
+        self.outfile.SetValue("energy.xvg")
+        hbox1.Add(outfile_text, 0, wx.ALL, 5)
+        hbox1.Add(self.outfile, 0, wx.ALL, 5)        
+
+        self.cb = wx.ComboBox(self, choices=energy_list, style=wx.CB_READONLY)
+
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        outfile_text2=wx.StaticText(self, label='Select an option    :')
+        hbox2.Add(outfile_text2, 0, wx.ALL, 5)
+        hbox2.Add(self.cb, 0, wx.ALL, 5)
+
+        self.btns = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(hbox1, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+        vbox.Add(hbox2, flag=wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, border=5)
+        vbox.Add(self.btns, flag=wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, border=5)
+
+        self.SetSizer(vbox)
 
 class RMS_D_and_F_Dialog(wx.Dialog):
     def __init__(self, which_box_string):
@@ -147,7 +129,6 @@ class RMS_D_and_F_Dialog(wx.Dialog):
        if dlg.ShowModal() == wx.ID_OK:
            return dlg.GetPath()
        dlg.Destroy()
-
 
 class PCA_Dialog(wx.Dialog):
     #----------------------------------------------------------------------
@@ -348,29 +329,23 @@ class MyMainWindow(wx.Frame):
 
         self.button4 = wx.Button(self, -1, "Plot Energy")
         self.button4.Bind(wx.EVT_BUTTON, self.OnPlotEnergy)
-#        self.button4.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
 
-        self.button5 = wx.Button(self, -1, "Plot Temperature")
-#        self.button5.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
-
-        self.button6 = wx.Button(self, -1, "Plot Pressure")
-#        self.button6.Bind(wx.EVT_BUTTON, self.drawPressurevsTime())
 
         #Toolbar items
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
         toolbar.AddSimpleTool(2, wx.Image('images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
         toolbar.AddSeparator()
-#        toolbar.AddSimpleTool(7, wx.Image('images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Prepare Model', '')
-        toolbar.AddSimpleTool(7, wx.Image('images/Prepare_New2.png', wx.BITMAP_TYPE_PNG).Rescale(56, 80).ConvertToBitmap(), 'Prepare Model', '')
-#        toolbar.AddSimpleTool(9, wx.Image('images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Solvate', '')
-        toolbar.AddSimpleTool(9, wx.Image('images/Solvate.png', wx.BITMAP_TYPE_PNG).Rescale(64, 80).ConvertToBitmap(), 'Solvate', '')
-#        toolbar.AddSimpleTool(10, wx.Image('images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(65, 40).ConvertToBitmap(), 'Ionize', '')
-        toolbar.AddSimpleTool(10, wx.Image('images/Ionize_new.png', wx.BITMAP_TYPE_PNG).Rescale(56, 80).ConvertToBitmap(), 'Ionize', '')
+        toolbar.AddSimpleTool(7, wx.Image('images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Prepare Model', '')
+#        toolbar.AddSimpleTool(7, wx.Image('images/Prepare_New2.png', wx.BITMAP_TYPE_PNG).Rescale(56, 80).ConvertToBitmap(), 'Prepare Model', '')
+        toolbar.AddSimpleTool(9, wx.Image('images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Solvate', '')
+#        toolbar.AddSimpleTool(9, wx.Image('images/Solvate.png', wx.BITMAP_TYPE_PNG).Rescale(64, 80).ConvertToBitmap(), 'Solvate', '')
+        toolbar.AddSimpleTool(10, wx.Image('images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(65, 40).ConvertToBitmap(), 'Ionize', '')
+#        toolbar.AddSimpleTool(10, wx.Image('images/Ionize_new.png', wx.BITMAP_TYPE_PNG).Rescale(56, 80).ConvertToBitmap(), 'Ionize', '')
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(11, wx.Image('images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Minimize', '')
         toolbar.AddSimpleTool(12, wx.Image('images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
         toolbar.AddSimpleTool(13, wx.Image('images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
-        toolbar.AddSimpleTool(14, wx.Image('images/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Production Run', '')
+        toolbar.AddSimpleTool(14, wx.Image('images/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Preduction Run', '')
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(4, wx.Image('images/stock_exit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
         toolbar.Realize()
@@ -380,12 +355,10 @@ class MyMainWindow(wx.Frame):
         self.sizer2.Add(self.button2, -1, wx.EXPAND)
         self.sizer2.Add(self.button3, -1, wx.EXPAND)
         self.sizer2.Add(self.button4, -1, wx.EXPAND)
-        self.sizer2.Add(self.button5, -1, wx.EXPAND)
-        self.sizer2.Add(self.button6, -1, wx.EXPAND)
 
         vbox.Add(toolbar, 0, wx.EXPAND)
-        vbox.Add(self.plottoolbar, 0, wx.EXPAND)
         vbox.Add(self.sizer2, 0, wx.EXPAND)
+        vbox.Add(self.plottoolbar, 0, wx.EXPAND)
         vbox.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
 
 #        self.drawLines()
@@ -604,44 +577,70 @@ class MyMainWindow(wx.Frame):
 
 ####################
     def OnPlotEnergy(self, event):
-        dlg = Energy_Dialog()
+        edr_file=""
+        out_file=""
+        dlg = Energy_Options_Check_Dialog()
         if (dlg.ShowModal()==wx.ID_OK):
-            print "Test!"
-#            atom_selection=dlg.rbox0.GetStringSelection().upper()
-#            pcA=dlg.rbox1.GetStringSelection()
-#            pcB=dlg.rbox2.GetStringSelection()
-#            beg_frame=dlg.num_entry1.GetValue()
-#            end_frame=dlg.num_entry2.GetValue()
-#            if(atom_selection == "CA"):
-#                echo_string="echo 3 3|"
-#            elif (atom_selection == "BACKBONE"):
-#                echo_string="echo 4 4|"
-#            else:
-#                echo_string=""
 
-#            ref_file=dlg.fbb1.GetValue()
-#            trj_file=dlg.fbb2.GetValue()
-#            out_file=dlg.outfile.GetValue()
-#            pca_command1="covar -f "+trj_file+" -s "+ref_file+" -o eigenval.xvg -v eigenvec.trr"
-#            pca_command2="anaeig -f "+trj_file+" -s "+ref_file+" -v eigenvec.trr -2d "+out_file+" -first "+pcA+" -last "+pcB        
+            edr_file=dlg.fbb.GetValue()
 
+            #First, get available parameters!
+            echo_string="echo 0 0|"
+            check_options_command="energy -f "+edr_file+" 2>options.dat"
 
-#            error_message="ERROR: Something went wrong in PCA procedure! Check log files!"
-#            if(version<5.0):
-#                status1=os.system(echo_string+"g_"+pca_command1)
-#                status2=os.system(echo_string+"g_"+pca_command2)
-#            elif(version>=5.0):
-#                status1=os.system(echo_string+"gmx "+pca_command1)
-#                status2=os.system(echo_string+"gmx "+pca_command2)
+            if(version<5.0):
+                status1=os.system(echo_string+"g_"+check_options_command)
+            elif(version>=5.0):
+                status1=os.system(echo_string+"gmx "+check_options_command)
 
-#           if((status1==0) and (status2==0)):
-#           #Plot RMSF on canvas
-#               self.drawPC_A_vs_PC_B(out_file, "PC"+pcA+" (nm)", "PC"+pcB+" (nm)")
-#           else:
-#               print (error_message)
+        dlg.Destroy()
+        
+        options_file=open("options.dat", "r")
+        lines=options_file.readlines()
+            
+        #Find lines between two dashed lines. 
+        counter=0
+        beg_and_end=[]
+        
+        for line in lines:
+            if line[0]=='-':
+                beg_and_end.append(counter)
+            counter+=1
+        energy_options=[]
+        for i in range((beg_and_end[0]+1), beg_and_end[1]):
+            energy_options.extend(lines[i].split())
 
-#            dlg.Destroy()
+        options_file.close()
+        energy_options_pairs=[]
+        for i in range (0, len(energy_options)/2):
+            temp_string=str(energy_options[2*i])+" "+str(energy_options[2*i+1])
+            energy_options_pairs.append(temp_string)
 
+        dlg=Energy_Plot_Dialog(energy_options_pairs)
+        if (dlg.ShowModal()==wx.ID_OK):
+
+            out_file=dlg.outfile.GetValue()
+            myindex=dlg.cb.GetValue().split()
+
+            #Now, plot selected index
+            echo_string="echo "+myindex[0]+" 0|"
+            print echo_string
+            energy_command="energy -f "+edr_file+" -o "+out_file
+
+            if(version<5.0):
+                status2=os.system(echo_string+"g_"+energy_command)
+            elif(version>=5.0):
+                status2=os.system(echo_string+"gmx "+energy_command)
+
+            error_message="ERROR: Something went wrong in energy calculation procedure! Check log files!"
+
+            if(status2==0):
+            #Plot Energy on canvas
+                self.drawBlahvsBlah(out_file, "Time", "Energy (kJ/mol)")
+            else:
+                print (error_message)
+
+        dlg.Destroy()
 
     def drawBlahvsBlah(self, out_file, x_label_string, y_label_string):
         data_file=open(out_file, "r")
