@@ -307,7 +307,7 @@ class PreparationDialog(wx.Dialog):
 
 class MyMainWindow(wx.Frame):
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(800, 600))
+        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(900, 675))
 
         #Box parameters
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -333,21 +333,32 @@ class MyMainWindow(wx.Frame):
 
         #Toolbar items
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(2, wx.Image('images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
+#        toolbar.AddSimpleTool(2, wx.Image('images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
+        toolbar.AddSimpleTool(2, wx.Image('new_icon_set/open/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Open', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(7, wx.Image('images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Prepare Model', '')
-#        toolbar.AddSimpleTool(7, wx.Image('images/Prepare_New2.png', wx.BITMAP_TYPE_PNG).Rescale(56, 80).ConvertToBitmap(), 'Prepare Model', '')
-        toolbar.AddSimpleTool(9, wx.Image('images/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(70, 40).ConvertToBitmap(), 'Solvate', '')
+#        toolbar.AddSimpleTool(7, wx.Image('new_images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Prepare Model', '')
+#        toolbar.AddSimpleTool(7, wx.Image('new_images/prepare.png', wx.BITMAP_TYPE_ANY).Rescale(85, 50).ConvertToBitmap(), 'Prepare Model', '')
+        toolbar.AddSimpleTool(7, wx.Image('new_icon_set/prepare/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Prepare Model', '')
+#        toolbar.AddSimpleTool(7, wx.Image('images/Prepare_New2.png', wx.BITMAP_TYPE_PNG).Rescale(56, 50).ConvertToBitmap(), 'Prepare Model', '')
+        toolbar.AddSimpleTool(9, wx.Image('new_icon_set/solvate/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Solvate', '')
+#        toolbar.AddSimpleTool(9, wx.Image('png_2/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Solvate', '')
 #        toolbar.AddSimpleTool(9, wx.Image('images/Solvate.png', wx.BITMAP_TYPE_PNG).Rescale(64, 80).ConvertToBitmap(), 'Solvate', '')
-        toolbar.AddSimpleTool(10, wx.Image('images/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(65, 40).ConvertToBitmap(), 'Ionize', '')
+        toolbar.AddSimpleTool(10, wx.Image('new_icon_set/ionize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Ionize', '')
+#        toolbar.AddSimpleTool(10, wx.Image('png_2/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Ionize', '')
 #        toolbar.AddSimpleTool(10, wx.Image('images/Ionize_new.png', wx.BITMAP_TYPE_PNG).Rescale(56, 80).ConvertToBitmap(), 'Ionize', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(11, wx.Image('images/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 40).ConvertToBitmap(), 'Minimize', '')
-        toolbar.AddSimpleTool(12, wx.Image('images/equilibrate_phase1.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
-        toolbar.AddSimpleTool(13, wx.Image('images/equilibrate_phase2.png', wx.BITMAP_TYPE_PNG).Rescale(110, 40).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
-        toolbar.AddSimpleTool(14, wx.Image('images/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(90, 40).ConvertToBitmap(), 'Preduction Run', '')
+        toolbar.AddSimpleTool(11, wx.Image('new_icon_set/minimize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Minimize', '')
+#        toolbar.AddSimpleTool(11, wx.Image('png_2/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Minimize', '')
+        toolbar.AddSimpleTool(12, wx.Image('new_icon_set/equilibrate_nvt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
+#        toolbar.AddSimpleTool(12, wx.Image('png_2/equilibrate_nvt.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
+        toolbar.AddSimpleTool(13, wx.Image('new_icon_set/equilibrate_npt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
+ 
+#        toolbar.AddSimpleTool(12, wx.Image('png_2/equilibrate_npt.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
+        toolbar.AddSimpleTool(14, wx.Image('new_icon_set/preduction/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Preduction Run', '')
+#        toolbar.AddSimpleTool(14, wx.Image('png_2/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Preduction Run', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(4, wx.Image('images/stock_exit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
+        toolbar.AddSimpleTool(4, wx.Image('new_icon_set/close/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Exit', '')
+#        toolbar.AddSimpleTool(4, wx.Image('png_2/close.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
         toolbar.Realize()
 
         self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -422,8 +433,8 @@ class MyMainWindow(wx.Frame):
 
     def OnAboutDlg(self, event):
         info = wx.AboutDialogInfo()
-        info.Name = "Quick and Dirty Gromacs"
-        info.Version = "0.0.4 Beta"
+        info.Name = "Easy GROMACS"
+        info.Version = "0.0.5 Beta"
         info.Copyright = "(C) 2014 Mustafa Tekpinar\nEmail: tekpinar@buffalo.edu\nLicence: LGPL"
         wx.AboutBox(info)
 
@@ -660,6 +671,7 @@ class MyMainWindow(wx.Frame):
         self.axes.grid()
         self.axes.set_xlabel(x_label_string) 
         self.axes.set_ylabel(y_label_string) 
+        self.axes.fill_between(md_pc1, 0, md_pc2, facecolor='blue', alpha=0.5)
         data_file.close()
         self.Layout()
 
@@ -702,7 +714,7 @@ class MyMainWindow(wx.Frame):
             self.drawLines()
             self.current_draw = 'lines'
         else: 
-            self.drawPotential(event)
+            self.drawPotential(out_file)
             self.current_draw = 'sin'
 
         self.Layout()
@@ -1113,7 +1125,8 @@ class MyMainWindow(wx.Frame):
             if(status2==0):
                 status2=os.system("g_energy -f "+dir+"/"+"em.edr -o "+dir+"/"+"potential.xvg")
 #                    self.changePlot(event)
-                self.drawPotential(event)
+#                self.drawPotential(event)
+                self.drawBlahvsBlah("potential.xvg", "Step", "Potential Energy (kJ/mol)")
             self.SetStatusText('Completed minimization succesfully!\n')
         else:
             print "ERROR: Hey dude! I think something is really wrong here in minimization!"                
@@ -1244,7 +1257,7 @@ class MyMainWindow(wx.Frame):
 
 class MyApp(wx.App):
     def OnInit(self):
-        frame = MyMainWindow(None, -1, 'Quick and Dirty Gromacs')
+        frame = MyMainWindow(None, -1, 'Easy GROMACS')
         frame.Show(True)
         return True
 
