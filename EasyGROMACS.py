@@ -307,7 +307,7 @@ class PreparationDialog(wx.Dialog):
 
 class MyMainWindow(wx.Frame):
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(900, 675))
+        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(1024, 768))
 
         #Box parameters
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -1134,7 +1134,7 @@ class MyMainWindow(wx.Frame):
 
         status1=os.system(pre_min_command)
         if(status1 == 0):
-            status2=os.system("mdrun -v -deffnm "+dir+"/"+"em 1>"+dir+"/"+"em.out 2>"+dir+"/"+"em.err")
+            status2=os.system("gmx mdrun -v -deffnm "+dir+"/"+"em 1>"+dir+"/"+"em.out 2>"+dir+"/"+"em.err")
             if(status2==0):
                 status2=os.system("g_energy -f "+dir+"/"+"em.edr -o "+dir+"/"+"potential.xvg")
 #                    self.changePlot(event)
@@ -1178,7 +1178,7 @@ class MyMainWindow(wx.Frame):
 
             status1=os.system(pre_phase1_command)
             if(status1 == 0):
-                status2=os.system("mdrun -v -deffnm "+dir+"/"+"nvt")
+                status2=os.system("gmx_mpi mdrun -v -deffnm "+dir+"/"+"nvt")
                 if(status2 == 0):
                     os.system("gmx energy -f "+dir+"/"+"nvt.edr -o "+dir+"/"+"temperature.xvg")
                     self.drawTemperaturevsTime(event)
@@ -1220,7 +1220,7 @@ class MyMainWindow(wx.Frame):
 
             status1=os.system(pre_phase2_command)
             if(status1 == 0):
-                status2=os.system("mdrun -v -deffnm "+dir+"/"+"npt")
+                status2=os.system("gmx_mpi mdrun -v -deffnm "+dir+"/"+"npt")
                 if(status2 == 0):
                     os.system("gmx energy -f "+dir+"/"+"npt.edr -o "+dir+"/"+"pressure.xvg")
                     self.drawPressurevsTime(event)
