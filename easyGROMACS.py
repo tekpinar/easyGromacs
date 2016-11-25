@@ -94,8 +94,8 @@ class RMS_D_and_F_Dialog(wx.Dialog):
         hbox2.Add(fnl_frm_text, 0, wx.ALL, 0)
         hbox2.Add(self.num_entry2, 0, wx.ALL, 0)
 
-        self.fbb1 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a reference file:", fileMask="*.pdb")
-        self.fbb2 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a trajectory file:", fileMask="*.xtc")
+        self.fbb1 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a reference file:", fileMask="*.pdb;*.gro")
+        self.fbb2 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a trajectory file:", fileMask="*.xtc;*.trr")
 
         hbox5 = wx.BoxSizer(wx.HORIZONTAL)
         outfile_text=wx.StaticText(self, label='Output file name     :')
@@ -331,7 +331,7 @@ class MyMainWindow(wx.Frame):
         self.button4.Bind(wx.EVT_BUTTON, self.OnPlotEnergy)
 
         self.button5 = wx.Button(self, -1, "Plot Rg")
-#        self.button5.Bind(wx.EVT_BUTTON, self.OnPlotEnergy)
+        self.button5.Bind(wx.EVT_BUTTON, self.OnPlotRg)
 
         self.button6 = wx.Button(self, -1, "Plot Clusters")
 #        self.button6.Bind(wx.EVT_BUTTON, self.OnPlotEnergy)
@@ -342,32 +342,23 @@ class MyMainWindow(wx.Frame):
 
         #Toolbar items
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-#        toolbar.AddSimpleTool(2, wx.Image('images/stock_open.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Open', '')
         toolbar.AddSimpleTool(2, wx.Image('icons/open/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Open', '')
         toolbar.AddSeparator()
-#        toolbar.AddSimpleTool(7, wx.Image('new_images/prepare.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Prepare Model', '')
-#        toolbar.AddSimpleTool(7, wx.Image('new_images/prepare.png', wx.BITMAP_TYPE_ANY).Rescale(85, 50).ConvertToBitmap(), 'Prepare Model', '')
+
+
         toolbar.AddSimpleTool(7, wx.Image('icons/prepare/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Prepare Model', '')
-#        toolbar.AddSimpleTool(7, wx.Image('images/Prepare_New2.png', wx.BITMAP_TYPE_PNG).Rescale(56, 50).ConvertToBitmap(), 'Prepare Model', '')
         toolbar.AddSimpleTool(9, wx.Image('icons/solvate/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Solvate', '')
-#        toolbar.AddSimpleTool(9, wx.Image('png_2/solvate.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Solvate', '')
-#        toolbar.AddSimpleTool(9, wx.Image('images/Solvate.png', wx.BITMAP_TYPE_PNG).Rescale(64, 80).ConvertToBitmap(), 'Solvate', '')
         toolbar.AddSimpleTool(10, wx.Image('icons/ionize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Ionize', '')
-#        toolbar.AddSimpleTool(10, wx.Image('png_2/ionize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Ionize', '')
-#        toolbar.AddSimpleTool(10, wx.Image('images/Ionize_new.png', wx.BITMAP_TYPE_PNG).Rescale(56, 80).ConvertToBitmap(), 'Ionize', '')
+
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(11, wx.Image('icons/minimize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Minimize', '')
-#        toolbar.AddSimpleTool(11, wx.Image('png_2/minimize.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Minimize', '')
         toolbar.AddSimpleTool(12, wx.Image('icons/equilibrate_nvt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
-#        toolbar.AddSimpleTool(12, wx.Image('png_2/equilibrate_nvt.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
         toolbar.AddSimpleTool(13, wx.Image('icons/equilibrate_npt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
- 
-#        toolbar.AddSimpleTool(12, wx.Image('png_2/equilibrate_npt.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
         toolbar.AddSimpleTool(14, wx.Image('icons/preduction/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Preduction Run', '')
-#        toolbar.AddSimpleTool(14, wx.Image('png_2/preduction.png', wx.BITMAP_TYPE_PNG).Rescale(85, 50).ConvertToBitmap(), 'Preduction Run', '')
+
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(4, wx.Image('icons/close/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Exit', '')
-#        toolbar.AddSimpleTool(4, wx.Image('png_2/close.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Exit', '')
+
         toolbar.Realize()
 
         self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -661,6 +652,44 @@ class MyMainWindow(wx.Frame):
             if(status2==0):
             #Plot Energy on canvas
                 self.drawBlahvsBlah(out_file, "Time", "Energy (kJ/mol)")
+            else:
+                print (error_message)
+
+        dlg.Destroy()
+        
+    def OnPlotRg(self, event):
+        dlg = RMS_D_and_F_Dialog("Rg")
+        if (dlg.ShowModal()==wx.ID_OK):
+            atom_selection=dlg.rbox1.GetStringSelection().upper()
+            beg_frame=dlg.num_entry1.GetValue()
+            end_frame=dlg.num_entry2.GetValue()
+            if(atom_selection == "CA"):
+                echo_string="echo 3 3|"
+            elif (atom_selection == "BACKBONE"):
+                echo_string="echo 4 4|"
+            else:
+                echo_string=""
+
+            ref_file=dlg.fbb1.GetValue()
+            trj_file=dlg.fbb2.GetValue()
+            out_file=dlg.outfile.GetValue()
+        
+            #Prepare for rmsf calculation
+            if((end_frame!="-1") and (beg_frame!="0")):
+                Rg_command="gyrate -s "+ref_file+" -f "+trj_file+" -o "+out_file+"-b "+beg_frame+" -e "+end_frame
+            else:
+                Rg_command="gyrate -s "+ref_file+" -f "+trj_file+" -o "+out_file
+
+            print Rg_command
+            error_message="ERROR: Something went wrong in Rg calculation procedure! Check log files!"
+            if(version<5.0):
+                status=os.system(echo_string+"g_"+Rg_command)
+            elif(version>=5.0):
+                status=os.system(echo_string+"gmx "+Rg_command)
+
+            if(status==0):
+            #Plot Rg on canvas
+                self.drawBlahvsBlah(out_file, "Time", "Rg (nm)")
             else:
                 print (error_message)
 
