@@ -1,0 +1,22 @@
+include icons/open/96x96.png
+include icons/close/96x96.png
+include icons/prepare/96x96.png
+include icons/solvate/96x96.png
+include icons/ionize/96x96.png
+include icons/minimize/96x96.png
+include icons/equilibrate_nvt/96x96.png
+include icons/equilibrate_npt/96x96.png
+include icons/preduction/96x96.png
+
+include scripts/gromacs_less_than_5/ions.mdp
+include scripts/gromacs_less_than_5/minim.mdp
+include scripts/gromacs_less_than_5/nvt.mdp
+include scripts/gromacs_less_than_5/npt.mdp
+include scripts/gromacs_less_than_5/md.mdp
+
+include scripts/gromacs_5_or_more/ions.mdp
+include scripts/gromacs_5_or_more/minim.mdp
+include scripts/gromacs_5_or_more/nvt.mdp
+include scripts/gromacs_5_or_more/npt.mdp
+include scripts/gromacs_5_or_more/md.mdp
+

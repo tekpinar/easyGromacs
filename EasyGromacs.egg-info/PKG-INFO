@@ -1,0 +1,18 @@
+Metadata-Version: 1.1
+Name: EasyGromacs
+Version: 0.0.6
+Summary: EasyGromacs Package
+Home-page: www.tekpinarlab.org
+Author: Mustafa Tekpinar
+Author-email: tekpinar@buffalo.edu
+License: LGPLv2
+Description: UNKNOWN
+Keywords: molecular dynamics gromacs
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
