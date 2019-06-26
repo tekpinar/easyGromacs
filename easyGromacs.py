@@ -5,10 +5,16 @@ import os
 import webbrowser
 import numpy
 import matplotlib
-
+#from matplotlib import use
+#use('WXAgg')
 from matplotlib.figure import Figure
+#from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+#from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as NavigationToolbar
+#from matplotlib.backends.backend_wx import NavigationToolbar2Wx as Toolbar
+#from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
+#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as NavigationToolbar
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 
 solvent_model=""
 base=""
@@ -125,7 +131,7 @@ class RMS_D_and_F_Dialog(wx.Dialog):
        dlg.Destroy()
 
     def opentrajectory(self, event):
-       dlg = wx.FileDialog(self, "Choose an initial xtc file", os.getcwd(), "", "*.xtc", wx.OPEN)
+       dlg = wx.FileDialog(self, "Choose an initial xtc file", os.getcwd(), "", "*.xtc;*.trr", wx.OPEN)
        if dlg.ShowModal() == wx.ID_OK:
            return dlg.GetPath()
        dlg.Destroy()
@@ -135,7 +141,7 @@ class PCA_Dialog(wx.Dialog):
     def __init__(self):
         """Constructor"""
         wx.Dialog.__init__(self, None, title="PCA Setup")
-        self.SetSize((550, 380))
+        self.SetSize((550, 480))
         type_lst = ["CA", "Backbone", "All atoms"]
         self.rbox0=wx.RadioBox(self, wx.ID_ANY, "", (20, 10), wx.DefaultSize, type_lst, 3, wx.RA_SPECIFY_COLS)
         sel_atms_text=wx.StaticText(self, label=' Selected atoms        :')
@@ -160,7 +166,7 @@ class PCA_Dialog(wx.Dialog):
         hbox2.Add(self.num_entry2, 0, wx.ALL, 0)
 
         self.fbb1 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a reference file:", fileMask="*.pdb")
-        self.fbb2 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a trajectory file:", fileMask="*.xtc")
+        self.fbb2 = wx.lib.filebrowsebutton.FileBrowseButton(self, size=(550, -1), labelText="Select a trajectory file:", fileMask="*.xtc;*.trr")
 
 ############################################
         pc_lst = ["1", "2", "3", "4"]
@@ -342,22 +348,36 @@ class MyMainWindow(wx.Frame):
 
         #Toolbar items
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(2, wx.Image('icons/open/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Open', '')
+#        toolbar.AddSimpleTool(2, wx.Image('icons/open/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Open', '')
+        toolbar.AddTool(2, 'Open', wx.Image('icons/open/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
         toolbar.AddSeparator()
 
 
-        toolbar.AddSimpleTool(7, wx.Image('icons/prepare/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Prepare Model', '')
-        toolbar.AddSimpleTool(9, wx.Image('icons/solvate/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Solvate', '')
-        toolbar.AddSimpleTool(10, wx.Image('icons/ionize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Ionize', '')
+#        toolbar.AddSimpleTool(7, wx.Image('icons/prepare/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Prepare Model', '')
+        toolbar.AddTool(7, 'Prepare Model', wx.Image('icons/prepare/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
+
+#        toolbar.AddSimpleTool(9, wx.Image('icons/solvate/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Solvate', '')
+        toolbar.AddTool(9, 'Solvate', wx.Image('icons/solvate/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
+ 
+#       toolbar.AddSimpleTool(10, wx.Image('icons/ionize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Ionize', '')
+        toolbar.AddTool(10, 'Ionize', wx.Image('icons/ionize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
 
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(11, wx.Image('icons/minimize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Minimize', '')
-        toolbar.AddSimpleTool(12, wx.Image('icons/equilibrate_nvt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
-        toolbar.AddSimpleTool(13, wx.Image('icons/equilibrate_npt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
-        toolbar.AddSimpleTool(14, wx.Image('icons/preduction/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Preduction Run', '')
+#        toolbar.AddSimpleTool(11, wx.Image('icons/minimize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Minimize', '')
+        toolbar.AddTool(11, 'Minimize', wx.Image('icons/minimize/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
+
+#        toolbar.AddSimpleTool(12, wx.Image('icons/equilibrate_nvt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 1', '')
+        toolbar.AddTool(12, 'Equilibrate-Phase 1', wx.Image('icons/equilibrate_nvt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
+
+#        toolbar.AddSimpleTool(13, wx.Image('icons/equilibrate_npt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Equilibrate-Phase 2', '')
+        toolbar.AddTool(13, 'Equilibrate-Phase 2', wx.Image('icons/equilibrate_npt/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
+
+#        toolbar.AddSimpleTool(14, wx.Image('icons/preduction/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Preduction Run', '')
+        toolbar.AddTool(14, 'Preduction Run', wx.Image('icons/preduction/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
 
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(4, wx.Image('icons/close/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Exit', '')
+#        toolbar.AddSimpleTool(4, wx.Image('icons/close/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), 'Exit', '')
+        toolbar.AddTool(4, 'Exit', wx.Image('icons/close/96x96.png', wx.BITMAP_TYPE_PNG).Rescale(96, 96).ConvertToBitmap(), '')
 
         toolbar.Realize()
 
@@ -495,7 +515,7 @@ class MyMainWindow(wx.Frame):
             else:
                 rmsd_command="rms -s "+ref_file+" -f "+trj_file+" -o "+out_file+" -tu ns "+"-b "+beg_frame
 
-            print rmsd_command
+            print(rmsd_command)
             error_message="ERROR: Something went wrong in rmsd procedure! Check log files!"
             if(version<5.0):
                 status=os.system(echo_string+"g_"+rmsd_command)
@@ -506,7 +526,7 @@ class MyMainWindow(wx.Frame):
            #Plot RMSD on canvas
                 self.drawBlahvsBlah(out_file, "Time (ns)", "RMSD (nm)")
             else:
-                print (error_message)
+                print(error_message)
 
         dlg.Destroy()
 
@@ -534,7 +554,7 @@ class MyMainWindow(wx.Frame):
             else:
                 rmsf_command="rmsf -s "+ref_file+" -f "+trj_file+" -res -o "+out_file
 
-            print rmsf_command
+            print(rmsf_command)
             error_message="ERROR: Something went wrong in rmsf procedure! Check log files!"
             if(version<5.0):
                 status=os.system(echo_string+"g_"+rmsf_command)
@@ -545,7 +565,7 @@ class MyMainWindow(wx.Frame):
             #Plot RMSF on canvas
                 self.drawBlahvsBlah(out_file, "Residues", "RMSF (nm)")
             else:
-                print (error_message)
+                print(error_message)
 
         dlg.Destroy()
 ####################
@@ -588,7 +608,7 @@ class MyMainWindow(wx.Frame):
             #Plot RMSF on canvas
                 self.drawPC_A_vs_PC_B(out_file, "PC"+pcA+" (nm)", "PC"+pcB+" (nm)")
             else:
-                print (error_message)
+                print(error_message)
 
         dlg.Destroy()
 
@@ -641,7 +661,7 @@ class MyMainWindow(wx.Frame):
 
             #Now, plot selected index
             echo_string="echo "+myindex[0]+" 0|"
-            print echo_string
+            print(echo_string)
             energy_command="energy -f "+edr_file+" -o "+out_file
 
             if(version<5.0):
@@ -655,7 +675,7 @@ class MyMainWindow(wx.Frame):
             #Plot Energy on canvas
                 self.drawBlahvsBlah(out_file, "Time", "Energy (kJ/mol)")
             else:
-                print (error_message)
+                print(error_message)
 
         dlg.Destroy()
         
@@ -682,7 +702,7 @@ class MyMainWindow(wx.Frame):
             else:
                 Rg_command="gyrate -s "+ref_file+" -f "+trj_file+" -o "+out_file
 
-            print Rg_command
+            print(Rg_command)
             error_message="ERROR: Something went wrong in Rg calculation procedure! Check log files!"
             if(version<5.0):
                 status=os.system(echo_string+"g_"+Rg_command)
@@ -693,7 +713,7 @@ class MyMainWindow(wx.Frame):
             #Plot Rg on canvas
                 self.drawBlahvsBlah(out_file, "Time", "Rg (nm)")
             else:
-                print (error_message)
+                print(error_message)
 
         dlg.Destroy()
 
@@ -731,7 +751,7 @@ class MyMainWindow(wx.Frame):
                 md_pc2.append(float(line.split()[1]))
                 counter+=1
 
-#        print "This file has %d lines"%counter
+#        print("This file has %d lines"%counter)
         md_time_percentage=[]
         for i in range(counter):
             time_percentage=0.0
@@ -909,7 +929,7 @@ class MyMainWindow(wx.Frame):
                     elif (solvent_model == "tip4p"):
                         os.system("genbox -cp "+dir+"/"+"newbox.pdb -cs tip4p.gro -o "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top")
                 else:
-                    print (error_message)
+                    print(error_message)
             elif(version>=5.0):
                 status=os.system("gmx "+presolvate_command)
                 if(status==0):
@@ -920,7 +940,7 @@ class MyMainWindow(wx.Frame):
                     elif (solvent_model == "tip4p"):
                         os.system("gmx solvate -cp "+dir+"/"+"newbox.pdb -cs tip4p.gro -o "+dir+"/"+"solvated.pdb -p "+dir+"/"+"topol.top")
                 else:
-                    print (error_message)
+                    print(error_message)
 
     def OnIonize(self, event):
         posIon=""
@@ -1009,7 +1029,7 @@ pbc            = xyz       ; Periodic Boundary Conditions (yes/no)
                 #Produce and place ions
                         os.system(ionize_command)
                     else:
-                        print (error_message)
+                        print(error_message)
 
                 elif(version>=5.0):
                     ions_mdp_file=open(dir+"/ions.mdp", 'w')
@@ -1020,7 +1040,7 @@ pbc            = xyz       ; Periodic Boundary Conditions (yes/no)
                 #Produce and place ions
                         os.system("gmx "+ionize_command)
                     else:
-                        print (error_message)
+                        print(error_message)
         dlg.Destroy()
 
     def set_temperature(self, event):
@@ -1157,7 +1177,7 @@ pbc            = xyz       ; Periodic Boundary Conditions (yes/no)
             for line in lines:
                 if( (line.find("dt") ) !=(-1)):
                     time_step=line.partition('=')[-1].rpartition(';')[0]
-                    print "This is time step"+time_step
+                    print("This is time step"+time_step)
             file.close()
         
             number_of_steps=1000*int(float(dlg.GetValue())/float(time_step))
@@ -1213,7 +1233,7 @@ pbc            = xyz       ; Periodic Boundary Conditions (yes/no)
                 self.drawBlahvsBlah("potential.xvg", "Step", "Potential Energy (kJ/mol)")
             self.SetStatusText('Completed minimization succesfully!\n')
         else:
-            print "ERROR: Hey dude! I think something is really wrong here in minimization!"                
+            print("ERROR: Hey dude! I think something is really wrong here in minimization!")
 
     def OnEquilibratePhase1(self, event):
         global dir
@@ -1255,7 +1275,7 @@ pbc            = xyz       ; Periodic Boundary Conditions (yes/no)
                     self.drawTemperaturevsTime(event)
                     self.SetStatusText('Completed NVT equilibration succesfully!\n')
                 else:
-                    print "ERROR: Hey dude! I think something went wrong in NVT simulation!"
+                    print("ERROR: Hey dude! I think something went wrong in NVT simulation!")
 
     def OnEquilibratePhase2(self, event):
         global dir
@@ -1297,9 +1317,9 @@ pbc            = xyz       ; Periodic Boundary Conditions (yes/no)
                     self.drawPressurevsTime(event)
                     self.SetStatusText('Completed NVT equilibration succesfully!\n')
                 else:
-                    print "ERROR: Hey dude! I think something went wrong in NPT results plotting procedure!"
+                    print("ERROR: Hey dude! I think something went wrong in NPT results plotting procedure!")
             else:
-                print "ERROR: Hey dude! I think something went wrong in NPT simulation!"
+                print("ERROR: Hey dude! I think something went wrong in NPT simulation!")
         
     def production_warning(self, event):
         dlg = wx.MessageDialog(None, "Congratulations! \nYou produced a md.tpr file. \nWe suggest you to perform\n production run on a cluster!",'Warning',wx.OK | wx.ICON_INFORMATION)
@@ -1334,7 +1354,7 @@ pbc            = xyz       ; Periodic Boundary Conditions (yes/no)
             if(status1==0):
                 self.production_warning(event)
             else:
-                print "ERROR: Hey dude! I think something went wrong in Pre Production run!"
+                print("ERROR: Hey dude! I think something went wrong in Pre Production run!")
     
     def OnQuit(self, e):
         self.Close()
